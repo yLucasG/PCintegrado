@@ -1,0 +1,181 @@
+<h1 class="text-2xl font-semibold text-slate-800">Painel do PC</h1>
+
+@if (errorMessage()) {
+  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+}
+
+<section class="mt-6 flex flex-wrap items-center gap-3 rounded-lg bg-white p-4 shadow">
+  <label class="text-sm text-slate-600">
+    Data
+    <input
+      class="ml-2 rounded border border-slate-300 px-3 py-2"
+      type="date"
+      [ngModel]="data()"
+      (ngModelChange)="onDataChange($event)"
+      name="data"
+    />
+  </label>
+  <select
+    class="rounded border border-slate-300 px-3 py-2 text-sm"
+    [ngModel]="filtroGuarnicaoId()"
+    (ngModelChange)="filtroGuarnicaoId.set($event)"
+    name="filtroGuarnicao"
+  >
+    <option value="">Todas as guarnições</option>
+    @for (guarnicao of guarnicoes(); track guarnicao.id) {
+      <option [value]="guarnicao.id">{{ guarnicao.nome }}</option>
+    }
+  </select>
+  <input
+    class="rounded border border-slate-300 px-3 py-2 text-sm"
+    placeholder="Buscar policial (nome ou matrícula)"
+    [ngModel]="buscaPolicial()"
+    (ngModelChange)="buscaPolicial.set($event)"
+    name="buscaPolicial"
+  />
+</section>
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  <h2 class="mb-3 text-lg font-medium text-slate-700">Registrar alteração</h2>
+  <form class="grid gap-3 sm:grid-cols-4" (ngSubmit)="onRegistrar()">
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      [ngModel]="tipoLancamento()"
+      (ngModelChange)="tipoLancamento.set($event)"
+      name="tipoLancamento"
+    >
+      @for (tipo of tiposLancamento; track tipo) {
+        <option [value]="tipo">{{ tipo }}</option>
+      }
+    </select>
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      required
+      [ngModel]="formPolicialMatricula()"
+      (ngModelChange)="formPolicialMatricula.set($event)"
+      name="formPolicial"
+    >
+      <option value="" disabled>
+        {{ tipoLancamento() === 'PERMUTA' ? 'Policial substituído' : 'Policial' }}
+      </option>
+      @for (policial of policiais(); track policial.matricula) {
+        <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+      }
+    </select>
+
+    @if (tipoLancamento() === 'PERMUTA') {
+      <select
+        class="rounded border border-slate-300 px-3 py-2"
+        required
+        [ngModel]="formSubstitutoMatricula()"
+        (ngModelChange)="formSubstitutoMatricula.set($event)"
+        name="formSubstituto"
+      >
+        <option value="" disabled>Policial substituto</option>
+        @for (policial of policiais(); track policial.matricula) {
+          <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+        }
+      </select>
+      <input
+        class="rounded border border-slate-300 px-3 py-2"
+        placeholder="SEI Nº"
+        [ngModel]="formSeiNumero()"
+        (ngModelChange)="formSeiNumero.set($event)"
+        name="formSei"
+      />
+    }
+
+    @if (tipoLancamento() === 'FALTA') {
+      <input
+        class="rounded border border-slate-300 px-3 py-2 sm:col-span-2"
+        placeholder="Motivo"
+        [ngModel]="formMotivo()"
+        (ngModelChange)="formMotivo.set($event)"
+        name="formMotivo"
+      />
+    }
+
+    @if (tipoLancamento() === 'FOLGA') {
+      <input
+        class="rounded border border-slate-300 px-3 py-2"
+        placeholder="SEI Nº"
+        [ngModel]="formSeiNumero()"
+        (ngModelChange)="formSeiNumero.set($event)"
+        name="formSeiFolga"
+      />
+      <input
+        class="rounded border border-slate-300 px-3 py-2"
+        placeholder="Autorização"
+        [ngModel]="formAutorizacao()"
+        (ngModelChange)="formAutorizacao.set($event)"
+        name="formAutorizacao"
+      />
+    }
+
+    @if (tipoLancamento() === 'REMANEJAMENTO') {
+      <input
+        class="rounded border border-slate-300 px-3 py-2 sm:col-span-2"
+        placeholder="Destino"
+        required
+        [ngModel]="formDestino()"
+        (ngModelChange)="formDestino.set($event)"
+        name="formDestino"
+      />
+    }
+
+    <button
+      class="rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-4"
+      type="submit"
+      [disabled]="registrando()"
+    >
+      Registrar
+    </button>
+  </form>
+</section>
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  @if (loading()) {
+    <p class="text-slate-500">Carregando...</p>
+  } @else {
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-slate-200 text-slate-500">
+          <th class="py-2">Guarnição</th>
+          <th class="py-2">Policial</th>
+          <th class="py-2">Função</th>
+          <th class="py-2">Horário</th>
+          <th class="py-2">Status</th>
+          <th class="py-2">Detalhe</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (linha of rosterFiltrado; track linha.escalaMensalId) {
+          <tr class="border-b border-slate-100">
+            <td class="py-2 text-slate-700">{{ guarnicaoNome(linha.guarnicaoId) }}</td>
+            <td class="py-2 text-slate-700">{{ policialNome(linha.policialMatricula) }}</td>
+            <td class="py-2 text-slate-700">{{ linha.funcao }}</td>
+            <td class="py-2 text-slate-700">{{ linha.horarioInicio }}–{{ linha.horarioFim }}</td>
+            <td class="py-2">
+              <span
+                class="rounded px-2 py-1 text-xs font-medium"
+                [class.bg-green-100]="linha.statusEfetivo === 'PREVISTO'"
+                [class.text-green-700]="linha.statusEfetivo === 'PREVISTO'"
+                [class.bg-red-100]="linha.statusEfetivo === 'FALTA'"
+                [class.text-red-700]="linha.statusEfetivo === 'FALTA'"
+                [class.bg-amber-100]="linha.statusEfetivo === 'SUBSTITUIDO'"
+                [class.text-amber-700]="linha.statusEfetivo === 'SUBSTITUIDO'"
+                [class.bg-blue-100]="linha.statusEfetivo === 'FOLGA'"
+                [class.text-blue-700]="linha.statusEfetivo === 'FOLGA'"
+                [class.bg-purple-100]="linha.statusEfetivo === 'REMANEJADO'"
+                [class.text-purple-700]="linha.statusEfetivo === 'REMANEJADO'"
+              >
+                {{ linha.statusEfetivo }}
+              </span>
+            </td>
+            <td class="py-2 text-slate-700">{{ linha.detalhe ?? '—' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
