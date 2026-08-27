@@ -229,6 +229,10 @@ export class PainelPcPage {
     return this.policiais().find((p) => p.matricula === matricula)?.nome_guerra ?? matricula;
   }
 
+  policialGraduacao(matricula: string): string {
+    return this.policiais().find((p) => p.matricula === matricula)?.graduacao ?? '';
+  }
+
   policialTelefone(matricula: string): string | null {
     return this.policiais().find((p) => p.matricula === matricula)?.telefone ?? null;
   }
