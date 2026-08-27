@@ -1,3 +1,5 @@
+> **Status (2026-08-27): All 13 tasks executed and verified.** 17/17 tests passing, production build green, pushed to `main` on GitHub. Notable deviations from the plan as written, discovered during execution: Angular 21 defaults to the Vitest runner (not Jasmine/Karma) and to suffix-less component class/file names (e.g. `LoginPage` in `login-page.ts`, not `LoginPageComponent` in `login-page.component.ts`); `@angular/router/testing` no longer exists, so specs use `provideRouter([])`; the `supabase` npm package has no win32-x64 binary, so the CLI was fetched directly from the GitHub release for this session's `supabase init` run. See git history for the as-built specifics.
+
 # PCintegrado Scaffold Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
