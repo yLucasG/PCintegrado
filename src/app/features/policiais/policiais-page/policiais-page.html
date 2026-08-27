@@ -1,0 +1,92 @@
+<h1 class="text-2xl font-semibold text-slate-800">Policiais</h1>
+
+@if (errorMessage()) {
+  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+}
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  <h2 class="mb-3 text-lg font-medium text-slate-700">Novo policial</h2>
+  <form class="grid gap-3 sm:grid-cols-5" (ngSubmit)="onCreate()">
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      placeholder="Matrícula"
+      required
+      [ngModel]="novaMatricula()"
+      (ngModelChange)="novaMatricula.set($event)"
+      name="matricula"
+    />
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      placeholder="Graduação"
+      required
+      [ngModel]="novaGraduacao()"
+      (ngModelChange)="novaGraduacao.set($event)"
+      name="graduacao"
+    />
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      placeholder="Nome de guerra"
+      required
+      [ngModel]="novoNomeGuerra()"
+      (ngModelChange)="novoNomeGuerra.set($event)"
+      name="nomeGuerra"
+    />
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      placeholder="Telefone"
+      [ngModel]="novoTelefone()"
+      (ngModelChange)="novoTelefone.set($event)"
+      name="telefone"
+    />
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      [ngModel]="novaCompanhiaId()"
+      (ngModelChange)="novaCompanhiaId.set($event)"
+      name="companhia"
+    >
+      <option value="">Sem companhia</option>
+      @for (companhia of companhias(); track companhia.id) {
+        <option [value]="companhia.id">{{ companhia.nome }}</option>
+      }
+    </select>
+    <button
+      class="rounded bg-blue-600 px-4 py-2 font-medium text-white sm:col-span-5"
+      type="submit"
+    >
+      Adicionar
+    </button>
+  </form>
+</section>
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  @if (loading()) {
+    <p class="text-slate-500">Carregando...</p>
+  } @else {
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-slate-200 text-slate-500">
+          <th class="py-2">Matrícula</th>
+          <th class="py-2">Grad.</th>
+          <th class="py-2">Nome de guerra</th>
+          <th class="py-2">Telefone</th>
+          <th class="py-2">Companhia</th>
+          <th class="py-2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (policial of policiais(); track policial.matricula) {
+          <tr class="border-b border-slate-100">
+            <td class="py-2 text-slate-700">{{ policial.matricula }}</td>
+            <td class="py-2 text-slate-700">{{ policial.graduacao }}</td>
+            <td class="py-2 text-slate-700">{{ policial.nome_guerra }}</td>
+            <td class="py-2 text-slate-700">{{ policial.telefone ?? '—' }}</td>
+            <td class="py-2 text-slate-700">{{ companhiaNome(policial.companhia_id) }}</td>
+            <td class="py-2 text-right">
+              <button class="text-sm text-red-600" (click)="onRemove(policial.matricula)">Remover</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
