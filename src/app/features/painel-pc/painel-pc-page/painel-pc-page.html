@@ -49,6 +49,14 @@
       (ngModelChange)="buscaPolicial.set($event)"
       name="buscaPolicial"
     />
+
+    <button
+      type="button"
+      class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white dark:bg-blue-500"
+      (click)="abrirNovaViatura()"
+    >
+      + Nova viatura
+    </button>
   </section>
 
   <section class="mt-6">
@@ -331,6 +339,151 @@
               [disabled]="registrando()"
             >
               Registrar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (novaViaturaAberta()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="fecharNovaViatura()">
+      <div
+        class="w-full max-w-lg rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900 dark:ring-1 dark:ring-slate-700"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="font-display text-lg font-semibold text-slate-800 dark:text-slate-100">
+            Nova viatura do dia
+          </h2>
+          <button
+            type="button"
+            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            (click)="fecharNovaViatura()"
+            aria-label="Fechar"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">
+          Cria uma guarnição/viatura nova e a lança apenas para o dia selecionado ({{ data() }}) — não afeta a
+          escala mensal recorrente.
+        </p>
+
+        <form class="grid gap-3 sm:grid-cols-2" (ngSubmit)="onCriarViatura()">
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Nome da viatura/guarnição (ex: GT 16999 - Reforço)"
+            required
+            [ngModel]="novaViaturaNome()"
+            (ngModelChange)="novaViaturaNome.set($event)"
+            name="novaViaturaNome"
+          />
+          <select
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            [ngModel]="novaViaturaTipo()"
+            (ngModelChange)="novaViaturaTipo.set($event)"
+            name="novaViaturaTipo"
+          >
+            @for (tipo of tiposGuarnicao; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+          <select
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            required
+            [ngModel]="novaViaturaCompanhiaId()"
+            (ngModelChange)="novaViaturaCompanhiaId.set($event)"
+            name="novaViaturaCompanhia"
+          >
+            <option value="" disabled>Companhia</option>
+            @for (companhia of companhias(); track companhia.id) {
+              <option [value]="companhia.id">{{ companhia.nome }}</option>
+            }
+          </select>
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Área de atuação"
+            [ngModel]="novaViaturaArea()"
+            (ngModelChange)="novaViaturaArea.set($event)"
+            name="novaViaturaArea"
+          />
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Prefixos (separados por vírgula)"
+            [ngModel]="novaViaturaPrefixos()"
+            (ngModelChange)="novaViaturaPrefixos.set($event)"
+            name="novaViaturaPrefixos"
+          />
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            type="time"
+            [ngModel]="novaViaturaHorarioInicio()"
+            (ngModelChange)="novaViaturaHorarioInicio.set($event)"
+            name="novaViaturaHorarioInicio"
+          />
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            type="time"
+            [ngModel]="novaViaturaHorarioFim()"
+            (ngModelChange)="novaViaturaHorarioFim.set($event)"
+            name="novaViaturaHorarioFim"
+          />
+
+          <div class="sm:col-span-2">
+            <p class="mb-1 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Efetivo (opcional)</p>
+            <div class="grid gap-2 sm:grid-cols-3">
+              <select
+                class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                [ngModel]="novaViaturaCmt()"
+                (ngModelChange)="novaViaturaCmt.set($event)"
+                name="novaViaturaCmt"
+              >
+                <option value="">CMT — sem definir</option>
+                @for (policial of policiais(); track policial.matricula) {
+                  <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+                }
+              </select>
+              <select
+                class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                [ngModel]="novaViaturaMot()"
+                (ngModelChange)="novaViaturaMot.set($event)"
+                name="novaViaturaMot"
+              >
+                <option value="">MOT — sem definir</option>
+                @for (policial of policiais(); track policial.matricula) {
+                  <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+                }
+              </select>
+              <select
+                class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                [ngModel]="novaViaturaPat()"
+                (ngModelChange)="novaViaturaPat.set($event)"
+                name="novaViaturaPat"
+              >
+                <option value="">PAT — sem definir</option>
+                @for (policial of policiais(); track policial.matricula) {
+                  <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="flex gap-2 sm:col-span-2">
+            <button
+              type="button"
+              class="flex-1 rounded border border-slate-300 px-4 py-2 font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+              (click)="fecharNovaViatura()"
+            >
+              Cancelar
+            </button>
+            <button
+              class="flex-1 rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-blue-500"
+              type="submit"
+              [disabled]="criandoViatura()"
+            >
+              Criar viatura
             </button>
           </div>
         </form>

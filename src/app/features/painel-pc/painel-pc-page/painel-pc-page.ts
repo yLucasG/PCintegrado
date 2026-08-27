@@ -3,8 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { BaixaRow, LancamentoService, RosterRow, StatusEfetivo } from '../../../core/services/lancamento.service';
-import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
+import { GuarnicoesService, GuarnicaoRow, TipoGuarnicao } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
+import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
+import { EscalaMensalService } from '../../../core/services/escala-mensal.service';
 
 type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO';
 
@@ -50,17 +52,34 @@ export class PainelPcPage {
   private readonly lancamentoService = inject(LancamentoService);
   private readonly guarnicoesService = inject(GuarnicoesService);
   private readonly policiaisService = inject(PoliciaisService);
+  private readonly companhiasService = inject(CompanhiasService);
+  private readonly escalaMensalService = inject(EscalaMensalService);
 
   readonly data = signal(hojeIso());
   readonly roster = signal<RosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
   readonly policiais = signal<PolicialRow[]>([]);
+  readonly companhias = signal<CompanhiaRow[]>([]);
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
   readonly filtroHorario = signal('');
   readonly buscaPolicial = signal('');
+
+  readonly novaViaturaAberta = signal(false);
+  readonly tiposGuarnicao: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV'];
+  readonly novaViaturaNome = signal('');
+  readonly novaViaturaTipo = signal<TipoGuarnicao>('GT_TATICO');
+  readonly novaViaturaCompanhiaId = signal('');
+  readonly novaViaturaArea = signal('');
+  readonly novaViaturaPrefixos = signal('');
+  readonly novaViaturaHorarioInicio = signal('06:00');
+  readonly novaViaturaHorarioFim = signal('18:00');
+  readonly novaViaturaCmt = signal('');
+  readonly novaViaturaMot = signal('');
+  readonly novaViaturaPat = signal('');
+  readonly criandoViatura = signal(false);
 
   readonly modalRow = signal<RosterRow | null>(null);
   readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO'];
@@ -226,12 +245,14 @@ export class PainelPcPage {
 
   async carregarListasBase(): Promise<void> {
     try {
-      const [guarnicoes, policiais] = await Promise.all([
+      const [guarnicoes, policiais, companhias] = await Promise.all([
         this.guarnicoesService.listGuarnicoes(),
         this.policiaisService.listPoliciais(),
+        this.companhiasService.listCompanhias(),
       ]);
       this.guarnicoes.set(guarnicoes);
       this.policiais.set(policiais);
+      this.companhias.set(companhias);
     } catch {
       this.errorMessage.set('Não foi possível carregar guarnições/policiais.');
     }
@@ -403,6 +424,74 @@ export class PainelPcPage {
       await this.reloadRoster();
     } catch {
       this.errorMessage.set('Não foi possível desfazer o remanejamento.');
+    }
+  }
+
+  abrirNovaViatura(): void {
+    this.novaViaturaAberta.set(true);
+    this.novaViaturaNome.set('');
+    this.novaViaturaTipo.set('GT_TATICO');
+    this.novaViaturaCompanhiaId.set('');
+    this.novaViaturaArea.set('');
+    this.novaViaturaPrefixos.set('');
+    this.novaViaturaHorarioInicio.set('06:00');
+    this.novaViaturaHorarioFim.set('18:00');
+    this.novaViaturaCmt.set('');
+    this.novaViaturaMot.set('');
+    this.novaViaturaPat.set('');
+  }
+
+  fecharNovaViatura(): void {
+    this.novaViaturaAberta.set(false);
+  }
+
+  async onCriarViatura(): Promise<void> {
+    this.criandoViatura.set(true);
+    this.errorMessage.set(null);
+    try {
+      const prefixos = this.novaViaturaPrefixos()
+        .split(',')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+
+      const guarnicao = await this.guarnicoesService.createGuarnicao({
+        nome: this.novaViaturaNome(),
+        tipo: this.novaViaturaTipo(),
+        companhia_id: this.novaViaturaCompanhiaId(),
+        area_atuacao: this.novaViaturaArea() || null,
+        prefixos: prefixos.length > 0 ? prefixos : null,
+      });
+
+      const data = this.data();
+      const diaDoMes = Number(data.slice(8, 10));
+      const atribuicoes: { funcao: 'CMT' | 'MOT' | 'PAT'; matricula: string }[] = [
+        { funcao: 'CMT' as const, matricula: this.novaViaturaCmt() },
+        { funcao: 'MOT' as const, matricula: this.novaViaturaMot() },
+        { funcao: 'PAT' as const, matricula: this.novaViaturaPat() },
+      ].filter((a) => a.matricula);
+
+      for (const atribuicao of atribuicoes) {
+        await this.escalaMensalService.createEscalaMensal({
+          guarnicao_id: guarnicao.id,
+          policial_matricula: atribuicao.matricula,
+          funcao: atribuicao.funcao,
+          horario_inicio: this.novaViaturaHorarioInicio(),
+          horario_fim: this.novaViaturaHorarioFim(),
+          tipo_recorrencia: 'DIAS_ESPECIFICOS',
+          dias_especificos: [diaDoMes],
+          vigencia_inicio: data,
+          vigencia_fim: data,
+          escala_origem: 'Lançamento avulso via Painel do PC',
+        });
+      }
+
+      this.fecharNovaViatura();
+      this.guarnicoes.set(await this.guarnicoesService.listGuarnicoes());
+      await this.reloadRoster();
+    } catch {
+      this.errorMessage.set('Não foi possível criar a viatura.');
+    } finally {
+      this.criandoViatura.set(false);
     }
   }
 
