@@ -2,7 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
-import { BaixaRow, LancamentoService, RosterRow, StatusEfetivo } from '../../../core/services/lancamento.service';
+import {
+  BaixaRow,
+  LancamentoService,
+  OsRow,
+  RosterRow,
+  StatusEfetivo,
+} from '../../../core/services/lancamento.service';
 import { GuarnicoesService, GuarnicaoRow, TipoGuarnicao } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
 import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
@@ -58,6 +64,7 @@ export class PainelPcPage {
   readonly data = signal(hojeIso());
   readonly roster = signal<RosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
+  readonly osRows = signal<OsRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
   readonly policiais = signal<PolicialRow[]>([]);
   readonly companhias = signal<CompanhiaRow[]>([]);
@@ -79,7 +86,12 @@ export class PainelPcPage {
   readonly novaViaturaCmt = signal('');
   readonly novaViaturaMot = signal('');
   readonly novaViaturaPat = signal('');
+  readonly novaViaturaPat2 = signal('');
   readonly criandoViatura = signal(false);
+
+  readonly osModalCard = signal<CardGuarnicao | null>(null);
+  readonly osTexto = signal('');
+  readonly salvandoOs = signal(false);
 
   readonly modalRow = signal<RosterRow | null>(null);
   readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO'];
@@ -96,6 +108,7 @@ export class PainelPcPage {
     void this.carregarListasBase();
     void this.reloadRoster();
     void this.reloadBaixas();
+    void this.reloadOs();
   }
 
   get horariosDisponiveis(): string[] {
@@ -278,9 +291,60 @@ export class PainelPcPage {
     }
   }
 
+  async reloadOs(): Promise<void> {
+    try {
+      this.osRows.set(await this.lancamentoService.listOsDoDia(this.data()));
+    } catch {
+      this.errorMessage.set('Não foi possível carregar as ordens de serviço.');
+    }
+  }
+
   async onDataChange(novaData: string): Promise<void> {
     this.data.set(novaData);
-    await Promise.all([this.reloadRoster(), this.reloadBaixas()]);
+    await Promise.all([this.reloadRoster(), this.reloadBaixas(), this.reloadOs()]);
+  }
+
+  osDoCard(card: CardGuarnicao): OsRow | undefined {
+    return this.osRows().find((o) => o.guarnicaoId === card.guarnicaoId && o.horarioInicio === card.horarioInicio);
+  }
+
+  abrirOs(card: CardGuarnicao): void {
+    this.osModalCard.set(card);
+    this.osTexto.set(this.osDoCard(card)?.numeroOs ?? '');
+  }
+
+  fecharOs(): void {
+    this.osModalCard.set(null);
+  }
+
+  async onSalvarOs(): Promise<void> {
+    const card = this.osModalCard();
+    if (!card) {
+      return;
+    }
+    this.salvandoOs.set(true);
+    this.errorMessage.set(null);
+    try {
+      const existente = this.osDoCard(card);
+      if (existente) {
+        await this.lancamentoService.removerOs(existente.id);
+      }
+      const texto = this.osTexto().trim();
+      if (texto) {
+        await this.lancamentoService.registrarOs({
+          data: this.data(),
+          guarnicao_id: card.guarnicaoId,
+          horario_inicio: card.horarioInicio,
+          numero_os: texto,
+        });
+      }
+      this.fecharOs();
+      await this.reloadOs();
+    } catch {
+      this.errorMessage.set('Não foi possível salvar a OS.');
+    } finally {
+      this.salvandoOs.set(false);
+    }
   }
 
   guarnicaoNome(id: string): string {
@@ -439,6 +503,7 @@ export class PainelPcPage {
     this.novaViaturaCmt.set('');
     this.novaViaturaMot.set('');
     this.novaViaturaPat.set('');
+    this.novaViaturaPat2.set('');
   }
 
   fecharNovaViatura(): void {
@@ -468,6 +533,7 @@ export class PainelPcPage {
         { funcao: 'CMT' as const, matricula: this.novaViaturaCmt() },
         { funcao: 'MOT' as const, matricula: this.novaViaturaMot() },
         { funcao: 'PAT' as const, matricula: this.novaViaturaPat() },
+        { funcao: 'PAT' as const, matricula: this.novaViaturaPat2() },
       ].filter((a) => a.matricula);
 
       for (const atribuicao of atribuicoes) {

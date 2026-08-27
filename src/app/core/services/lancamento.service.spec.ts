@@ -314,4 +314,62 @@ describe('LancamentoService', () => {
 
     expect(eqSpy).toHaveBeenCalledWith('id', 'baixa1');
   });
+
+  it('lists OS entries for a given day', async () => {
+    const rows = [{ id: 'os1', guarnicao_id: 'g1', horario_inicio: '06:00:00', numero_os: 'OS 123/2026' }];
+    const supabaseStub = {
+      client: {
+        from: () => ({
+          select: () => ({ eq: () => Promise.resolve({ data: rows, error: null }) }),
+        }),
+      },
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listOsDoDia('2026-08-04');
+
+    expect(result).toEqual([
+      { id: 'os1', guarnicaoId: 'g1', horarioInicio: '06:00:00', numeroOs: 'OS 123/2026' },
+    ]);
+  });
+
+  it('registers an OS via insert on lancamento_os', async () => {
+    const insertSpy = vi.fn().mockResolvedValue({ error: null });
+    const supabaseStub = { client: { from: () => ({ insert: insertSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.registrarOs({
+      data: '2026-08-04',
+      guarnicao_id: 'g1',
+      horario_inicio: '06:00:00',
+      numero_os: 'OS 123/2026',
+    });
+
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ guarnicao_id: 'g1', numero_os: 'OS 123/2026' }),
+    );
+  });
+
+  it('removes an OS by id', async () => {
+    const eqSpy = vi.fn().mockResolvedValue({ error: null });
+    const deleteSpy = vi.fn().mockReturnValue({ eq: eqSpy });
+    const supabaseStub = { client: { from: () => ({ delete: deleteSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.removerOs('os1');
+
+    expect(eqSpy).toHaveBeenCalledWith('id', 'os1');
+  });
 });

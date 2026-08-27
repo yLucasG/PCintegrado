@@ -69,27 +69,43 @@
             class="flex flex-col rounded-lg border-l-4 border border-white/60 bg-white/70 shadow backdrop-blur-md transition-opacity dark:border-slate-700/50 dark:bg-slate-900/50 dark:shadow-none"
             [ngClass]="[corBordaCard(card), isBaixada(card) ? 'opacity-50 grayscale' : '']"
           >
-            <button
-              type="button"
-              class="p-4 text-left"
-              title="Clique para ativar/desativar esta viatura"
-              (click)="toggleBaixa(card)"
-            >
-              <div class="flex items-center gap-2">
-                <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.nome }}</h3>
-                @if (isBaixada(card)) {
-                  <span
-                    class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                  >
-                    Desativada
-                  </span>
+            <div class="flex items-start justify-between gap-2 p-4">
+              <button
+                type="button"
+                class="text-left"
+                title="Clique para ativar/desativar esta viatura"
+                (click)="toggleBaixa(card)"
+              >
+                <div class="flex items-center gap-2">
+                  <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.nome }}</h3>
+                  @if (isBaixada(card)) {
+                    <span
+                      class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                    >
+                      Desativada
+                    </span>
+                  }
+                </div>
+                @if (card.areaAtuacao) {
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
                 }
-              </div>
-              @if (card.areaAtuacao) {
-                <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
-              }
-              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
-            </button>
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
+              </button>
+
+              <button
+                type="button"
+                class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                [ngClass]="
+                  osDoCard(card)
+                    ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300'
+                    : 'border border-dashed border-slate-300 text-slate-400 dark:border-slate-600 dark:text-slate-500'
+                "
+                title="Ordem de Serviço"
+                (click)="abrirOs(card)"
+              >
+                {{ osDoCard(card)?.numeroOs || 'OS' }}
+              </button>
+            </div>
 
             <div
               cdkDropList
@@ -433,7 +449,7 @@
 
           <div class="sm:col-span-2">
             <p class="mb-1 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Efetivo (opcional)</p>
-            <div class="grid gap-2 sm:grid-cols-3">
+            <div class="grid gap-2 sm:grid-cols-2">
               <select
                 class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 [ngModel]="novaViaturaCmt()"
@@ -462,7 +478,18 @@
                 (ngModelChange)="novaViaturaPat.set($event)"
                 name="novaViaturaPat"
               >
-                <option value="">PAT — sem definir</option>
+                <option value="">PAT 1 — sem definir</option>
+                @for (policial of policiais(); track policial.matricula) {
+                  <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+                }
+              </select>
+              <select
+                class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                [ngModel]="novaViaturaPat2()"
+                (ngModelChange)="novaViaturaPat2.set($event)"
+                name="novaViaturaPat2"
+              >
+                <option value="">PAT 2 — sem definir</option>
                 @for (policial of policiais(); track policial.matricula) {
                   <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
                 }
@@ -484,6 +511,46 @@
               [disabled]="criandoViatura()"
             >
               Criar viatura
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (osModalCard(); as card) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="fecharOs()">
+      <div
+        class="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900 dark:ring-1 dark:ring-slate-700"
+        (click)="$event.stopPropagation()"
+      >
+        <h2 class="font-display text-lg font-semibold text-slate-800 dark:text-slate-100">Ordem de Serviço</h2>
+        <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ card.nome }}</p>
+
+        <form class="grid gap-3" (ngSubmit)="onSalvarOs()">
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Número/nome da OS"
+            [ngModel]="osTexto()"
+            (ngModelChange)="osTexto.set($event)"
+            name="osTexto"
+          />
+          <p class="text-xs text-slate-400 dark:text-slate-500">Deixe em branco e salve para remover a OS.</p>
+
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded border border-slate-300 px-4 py-2 font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+              (click)="fecharOs()"
+            >
+              Cancelar
+            </button>
+            <button
+              class="flex-1 rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-blue-500"
+              type="submit"
+              [disabled]="salvandoOs()"
+            >
+              Salvar
             </button>
           </div>
         </form>

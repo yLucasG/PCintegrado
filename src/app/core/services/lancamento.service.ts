@@ -75,6 +75,20 @@ export interface RegistrarBaixaInput {
   motivo?: string | null;
 }
 
+export interface OsRow {
+  id: string;
+  guarnicaoId: string;
+  horarioInicio: string;
+  numeroOs: string;
+}
+
+export interface RegistrarOsInput {
+  data: string;
+  guarnicao_id: string;
+  horario_inicio: string;
+  numero_os: string;
+}
+
 interface RosterRpcRow {
   id: string;
   guarnicao_id: string;
@@ -272,6 +286,34 @@ export class LancamentoService {
 
   async removerBaixa(id: string): Promise<void> {
     const { error } = await this.supabase.client.from('lancamento_baixas').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async listOsDoDia(data: string): Promise<OsRow[]> {
+    const { data: rows, error } = await this.supabase.client.from('lancamento_os').select('*').eq('data', data);
+    if (error) throw error;
+    return (
+      (rows ?? []) as { id: string; guarnicao_id: string; horario_inicio: string; numero_os: string }[]
+    ).map((r) => ({
+      id: r.id,
+      guarnicaoId: r.guarnicao_id,
+      horarioInicio: r.horario_inicio,
+      numeroOs: r.numero_os,
+    }));
+  }
+
+  async registrarOs(input: RegistrarOsInput): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_os').insert({
+      data: input.data,
+      guarnicao_id: input.guarnicao_id,
+      horario_inicio: input.horario_inicio,
+      numero_os: input.numero_os,
+    });
+    if (error) throw error;
+  }
+
+  async removerOs(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_os').delete().eq('id', id);
     if (error) throw error;
   }
 }
