@@ -1,0 +1,70 @@
+<h1 class="text-2xl font-semibold text-slate-800">Administração de Usuários</h1>
+
+@if (errorMessage()) {
+  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+}
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  <h2 class="mb-3 text-lg font-medium text-slate-700">Novo usuário</h2>
+  <form class="grid gap-3 sm:grid-cols-4" (ngSubmit)="onCreateUser()">
+    <input
+      class="rounded border border-slate-300 px-3 py-2 sm:col-span-2"
+      type="email"
+      placeholder="E-mail"
+      required
+      [ngModel]="newEmail()"
+      (ngModelChange)="newEmail.set($event)"
+      name="newEmail"
+    />
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      type="password"
+      placeholder="Senha"
+      required
+      [ngModel]="newPassword()"
+      (ngModelChange)="newPassword.set($event)"
+      name="newPassword"
+    />
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      [ngModel]="newRole()"
+      (ngModelChange)="newRole.set($event)"
+      name="newRole"
+    >
+      @for (role of roles; track role) {
+        <option [value]="role">{{ role }}</option>
+      }
+    </select>
+    <button
+      class="rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-4"
+      type="submit"
+      [disabled]="creating()"
+    >
+      Criar usuário
+    </button>
+  </form>
+</section>
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  <h2 class="mb-3 text-lg font-medium text-slate-700">Usuários existentes</h2>
+  @if (loading()) {
+    <p class="text-slate-500">Carregando...</p>
+  } @else {
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-slate-200 text-slate-500">
+          <th class="py-2">ID</th>
+          <th class="py-2">Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (perfil of perfis(); track perfil.id) {
+          <tr class="border-b border-slate-100">
+            <td class="py-2 text-slate-700">{{ perfil.id }}</td>
+            <td class="py-2 text-slate-700">{{ perfil.role }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
