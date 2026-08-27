@@ -1,0 +1,20 @@
+<header class="hidden h-16 items-center justify-between border-b border-slate-200 bg-white px-6 md:flex">
+  <span class="text-lg font-semibold text-slate-800">PCintegrado</span>
+
+  <nav class="flex items-center gap-6">
+    <a
+      class="text-slate-600 hover:text-blue-600"
+      routerLink="/"
+      routerLinkActive="text-blue-600"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
+      Painel
+    </a>
+    @if (authService.currentPerfil?.role === 'ADMIN') {
+      <a class="text-slate-600 hover:text-blue-600" routerLink="/admin" routerLinkActive="text-blue-600">
+        Admin
+      </a>
+    }
+    <button class="text-sm text-slate-500 hover:text-red-600" (click)="signOut()">Sair</button>
+  </nav>
+</header>
