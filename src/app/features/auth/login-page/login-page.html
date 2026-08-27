@@ -1,10 +1,13 @@
-<div class="flex min-h-screen items-center justify-center bg-slate-100">
-  <form class="w-full max-w-sm rounded-lg bg-white p-8 shadow" (ngSubmit)="onSubmit()">
-    <h1 class="mb-6 text-xl font-semibold text-slate-800">PCintegrado</h1>
+<div class="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
+  <form
+    class="w-full max-w-sm rounded-lg bg-white p-8 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800"
+    (ngSubmit)="onSubmit()"
+  >
+    <h1 class="mb-6 font-display text-xl font-semibold text-slate-800 dark:text-slate-100">PCintegrado</h1>
 
-    <label class="mb-1 block text-sm font-medium text-slate-600">E-mail</label>
+    <label class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">E-mail</label>
     <input
-      class="mb-4 w-full rounded border border-slate-300 px-3 py-2"
+      class="mb-4 w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="email"
       name="email"
       required
@@ -12,9 +15,9 @@
       (ngModelChange)="email.set($event)"
     />
 
-    <label class="mb-1 block text-sm font-medium text-slate-600">Senha</label>
+    <label class="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">Senha</label>
     <input
-      class="mb-4 w-full rounded border border-slate-300 px-3 py-2"
+      class="mb-4 w-full rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="password"
       name="password"
       required
@@ -23,11 +26,11 @@
     />
 
     @if (errorMessage()) {
-      <p class="mb-4 text-sm text-red-600">{{ errorMessage() }}</p>
+      <p class="mb-4 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
     }
 
     <button
-      class="w-full rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50"
+      class="w-full rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-blue-500"
       type="submit"
       [disabled]="submitting()"
     >

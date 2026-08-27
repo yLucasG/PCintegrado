@@ -1,14 +1,14 @@
-<h1 class="text-2xl font-semibold text-slate-800">Guarnições</h1>
+<h1 class="font-display text-2xl font-semibold text-slate-800 dark:text-slate-100">Guarnições</h1>
 
 @if (errorMessage()) {
-  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+  <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
 }
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
-  <h2 class="mb-3 text-lg font-medium text-slate-700">Nova guarnição</h2>
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+  <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Nova guarnição</h2>
   <form class="grid gap-3 sm:grid-cols-3" (ngSubmit)="onCreate()">
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Nome"
       required
       [ngModel]="novoNome()"
@@ -16,7 +16,7 @@
       name="nome"
     />
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       [ngModel]="novoTipo()"
       (ngModelChange)="novoTipo.set($event)"
       name="tipo"
@@ -26,7 +26,7 @@
       }
     </select>
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       required
       [ngModel]="novaCompanhiaId()"
       (ngModelChange)="novaCompanhiaId.set($event)"
@@ -38,32 +38,35 @@
       }
     </select>
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Área de atuação"
       [ngModel]="novaArea()"
       (ngModelChange)="novaArea.set($event)"
       name="area"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2 sm:col-span-2"
+      class="rounded border border-slate-300 px-3 py-2 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Prefixos (separados por vírgula)"
       [ngModel]="novosPrefixos()"
       (ngModelChange)="novosPrefixos.set($event)"
       name="prefixos"
     />
-    <button class="rounded bg-blue-600 px-4 py-2 font-medium text-white sm:col-span-3" type="submit">
+    <button
+      class="rounded bg-blue-600 px-4 py-2 font-medium text-white sm:col-span-3 dark:bg-blue-500"
+      type="submit"
+    >
       Adicionar
     </button>
   </form>
 </section>
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
   @if (loading()) {
-    <p class="text-slate-500">Carregando...</p>
+    <p class="text-slate-500 dark:text-slate-400">Carregando...</p>
   } @else {
     <table class="w-full text-left text-sm">
       <thead>
-        <tr class="border-b border-slate-200 text-slate-500">
+        <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <th class="py-2">Nome</th>
           <th class="py-2">Tipo</th>
           <th class="py-2">Companhia</th>
@@ -73,13 +76,17 @@
       </thead>
       <tbody>
         @for (guarnicao of guarnicoes(); track guarnicao.id) {
-          <tr class="border-b border-slate-100">
-            <td class="py-2 text-slate-700">{{ guarnicao.nome }}</td>
-            <td class="py-2 text-slate-700">{{ guarnicao.tipo }}</td>
-            <td class="py-2 text-slate-700">{{ companhiaNome(guarnicao.companhia_id) }}</td>
-            <td class="py-2 text-slate-700">{{ (guarnicao.prefixos ?? []).join(', ') || '—' }}</td>
+          <tr class="border-b border-slate-100 dark:border-slate-800">
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ guarnicao.nome }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ guarnicao.tipo }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ companhiaNome(guarnicao.companhia_id) }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">
+              {{ (guarnicao.prefixos ?? []).join(', ') || '—' }}
+            </td>
             <td class="py-2 text-right">
-              <button class="text-sm text-red-600" (click)="onRemove(guarnicao.id)">Remover</button>
+              <button class="text-sm text-red-600 dark:text-red-400" (click)="onRemove(guarnicao.id)">
+                Remover
+              </button>
             </td>
           </tr>
         }

@@ -1,14 +1,14 @@
-<h1 class="text-2xl font-semibold text-slate-800">Escala Mensal</h1>
+<h1 class="font-display text-2xl font-semibold text-slate-800 dark:text-slate-100">Escala Mensal</h1>
 
 @if (errorMessage()) {
-  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+  <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
 }
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
-  <h2 class="mb-3 text-lg font-medium text-slate-700">Nova escala</h2>
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+  <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Nova escala</h2>
   <form class="grid gap-3 sm:grid-cols-4" (ngSubmit)="onCreate()">
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       required
       [ngModel]="novaGuarnicaoId()"
       (ngModelChange)="novaGuarnicaoId.set($event)"
@@ -20,7 +20,7 @@
       }
     </select>
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       required
       [ngModel]="novaMatricula()"
       (ngModelChange)="novaMatricula.set($event)"
@@ -32,7 +32,7 @@
       }
     </select>
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       [ngModel]="novaFuncao()"
       (ngModelChange)="novaFuncao.set($event)"
       name="funcao"
@@ -42,7 +42,7 @@
       }
     </select>
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       [ngModel]="novoTipoRecorrencia()"
       (ngModelChange)="novoTipoRecorrencia.set($event)"
       name="recorrencia"
@@ -52,38 +52,38 @@
       }
     </select>
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="time"
       [ngModel]="novoHorarioInicio()"
       (ngModelChange)="novoHorarioInicio.set($event)"
       name="horarioInicio"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="time"
       [ngModel]="novoHorarioFim()"
       (ngModelChange)="novoHorarioFim.set($event)"
       name="horarioFim"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="date"
       required
       [ngModel]="novaVigenciaInicio()"
       (ngModelChange)="novaVigenciaInicio.set($event)"
       name="vigenciaInicio"
     />
-    <button class="rounded bg-blue-600 px-4 py-2 font-medium text-white" type="submit">
+    <button class="rounded bg-blue-600 px-4 py-2 font-medium text-white dark:bg-blue-500" type="submit">
       Adicionar
     </button>
   </form>
 </section>
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
   <div class="mb-3 flex items-center gap-3">
-    <h2 class="text-lg font-medium text-slate-700">Escalas cadastradas</h2>
+    <h2 class="text-lg font-medium text-slate-700 dark:text-slate-200">Escalas cadastradas</h2>
     <select
-      class="rounded border border-slate-300 px-3 py-1 text-sm"
+      class="rounded border border-slate-300 px-3 py-1 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       [ngModel]="filtroGuarnicaoId()"
       (ngModelChange)="filtroGuarnicaoId.set($event)"
       name="filtroGuarnicao"
@@ -95,11 +95,11 @@
     </select>
   </div>
   @if (loading()) {
-    <p class="text-slate-500">Carregando...</p>
+    <p class="text-slate-500 dark:text-slate-400">Carregando...</p>
   } @else {
     <table class="w-full text-left text-sm">
       <thead>
-        <tr class="border-b border-slate-200 text-slate-500">
+        <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <th class="py-2">Guarnição</th>
           <th class="py-2">Policial</th>
           <th class="py-2">Função</th>
@@ -111,15 +111,19 @@
       </thead>
       <tbody>
         @for (escala of escalasFiltradas; track escala.id) {
-          <tr class="border-b border-slate-100">
-            <td class="py-2 text-slate-700">{{ guarnicaoNome(escala.guarnicao_id) }}</td>
-            <td class="py-2 text-slate-700">{{ policialNome(escala.policial_matricula) }}</td>
-            <td class="py-2 text-slate-700">{{ escala.funcao }}</td>
-            <td class="py-2 text-slate-700">{{ escala.horario_inicio }}–{{ escala.horario_fim }}</td>
-            <td class="py-2 text-slate-700">{{ escala.tipo_recorrencia }}</td>
-            <td class="py-2 text-slate-700">{{ escala.vigencia_inicio }}</td>
+          <tr class="border-b border-slate-100 dark:border-slate-800">
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ guarnicaoNome(escala.guarnicao_id) }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ policialNome(escala.policial_matricula) }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ escala.funcao }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">
+              {{ escala.horario_inicio }}–{{ escala.horario_fim }}
+            </td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ escala.tipo_recorrencia }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ escala.vigencia_inicio }}</td>
             <td class="py-2 text-right">
-              <button class="text-sm text-red-600" (click)="onRemove(escala.id)">Remover</button>
+              <button class="text-sm text-red-600 dark:text-red-400" (click)="onRemove(escala.id)">
+                Remover
+              </button>
             </td>
           </tr>
         }

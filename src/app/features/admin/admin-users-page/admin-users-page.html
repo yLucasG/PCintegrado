@@ -1,14 +1,14 @@
-<h1 class="text-2xl font-semibold text-slate-800">Administração de Usuários</h1>
+<h1 class="font-display text-2xl font-semibold text-slate-800 dark:text-slate-100">Administração de Usuários</h1>
 
 @if (errorMessage()) {
-  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+  <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
 }
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
-  <h2 class="mb-3 text-lg font-medium text-slate-700">Novo usuário</h2>
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+  <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Novo usuário</h2>
   <form class="grid gap-3 sm:grid-cols-4" (ngSubmit)="onCreateUser()">
     <input
-      class="rounded border border-slate-300 px-3 py-2 sm:col-span-2"
+      class="rounded border border-slate-300 px-3 py-2 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="email"
       placeholder="E-mail"
       required
@@ -17,7 +17,7 @@
       name="newEmail"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       type="password"
       placeholder="Senha"
       required
@@ -26,7 +26,7 @@
       name="newPassword"
     />
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       [ngModel]="newRole()"
       (ngModelChange)="newRole.set($event)"
       name="newRole"
@@ -36,7 +36,7 @@
       }
     </select>
     <button
-      class="rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-4"
+      class="rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-4 dark:bg-blue-500"
       type="submit"
       [disabled]="creating()"
     >
@@ -45,23 +45,23 @@
   </form>
 </section>
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
-  <h2 class="mb-3 text-lg font-medium text-slate-700">Usuários existentes</h2>
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+  <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Usuários existentes</h2>
   @if (loading()) {
-    <p class="text-slate-500">Carregando...</p>
+    <p class="text-slate-500 dark:text-slate-400">Carregando...</p>
   } @else {
     <table class="w-full text-left text-sm">
       <thead>
-        <tr class="border-b border-slate-200 text-slate-500">
+        <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <th class="py-2">ID</th>
           <th class="py-2">Role</th>
         </tr>
       </thead>
       <tbody>
         @for (perfil of perfis(); track perfil.id) {
-          <tr class="border-b border-slate-100">
-            <td class="py-2 text-slate-700">{{ perfil.id }}</td>
-            <td class="py-2 text-slate-700">{{ perfil.role }}</td>
+          <tr class="border-b border-slate-100 dark:border-slate-800">
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ perfil.id }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ perfil.role }}</td>
           </tr>
         }
       </tbody>

@@ -1,14 +1,14 @@
-<h1 class="text-2xl font-semibold text-slate-800">Policiais</h1>
+<h1 class="font-display text-2xl font-semibold text-slate-800 dark:text-slate-100">Policiais</h1>
 
 @if (errorMessage()) {
-  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+  <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
 }
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
-  <h2 class="mb-3 text-lg font-medium text-slate-700">Novo policial</h2>
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+  <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Novo policial</h2>
   <form class="grid gap-3 sm:grid-cols-5" (ngSubmit)="onCreate()">
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Matrícula"
       required
       [ngModel]="novaMatricula()"
@@ -16,7 +16,7 @@
       name="matricula"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Graduação"
       required
       [ngModel]="novaGraduacao()"
@@ -24,7 +24,7 @@
       name="graduacao"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Nome de guerra"
       required
       [ngModel]="novoNomeGuerra()"
@@ -32,14 +32,14 @@
       name="nomeGuerra"
     />
     <input
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Telefone"
       [ngModel]="novoTelefone()"
       (ngModelChange)="novoTelefone.set($event)"
       name="telefone"
     />
     <select
-      class="rounded border border-slate-300 px-3 py-2"
+      class="rounded border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       [ngModel]="novaCompanhiaId()"
       (ngModelChange)="novaCompanhiaId.set($event)"
       name="companhia"
@@ -50,7 +50,7 @@
       }
     </select>
     <button
-      class="rounded bg-blue-600 px-4 py-2 font-medium text-white sm:col-span-5"
+      class="rounded bg-blue-600 px-4 py-2 font-medium text-white sm:col-span-5 dark:bg-blue-500"
       type="submit"
     >
       Adicionar
@@ -58,13 +58,13 @@
   </form>
 </section>
 
-<section class="mt-6 rounded-lg bg-white p-4 shadow">
+<section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
   @if (loading()) {
-    <p class="text-slate-500">Carregando...</p>
+    <p class="text-slate-500 dark:text-slate-400">Carregando...</p>
   } @else {
     <table class="w-full text-left text-sm">
       <thead>
-        <tr class="border-b border-slate-200 text-slate-500">
+        <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <th class="py-2">Matrícula</th>
           <th class="py-2">Grad.</th>
           <th class="py-2">Nome de guerra</th>
@@ -76,26 +76,31 @@
       </thead>
       <tbody>
         @for (policial of policiais(); track policial.matricula) {
-          <tr class="border-b border-slate-100">
-            <td class="py-2 text-slate-700">{{ policial.matricula }}</td>
-            <td class="py-2 text-slate-700">{{ policial.graduacao }}</td>
-            <td class="py-2 text-slate-700">{{ policial.nome_guerra }}</td>
-            <td class="py-2 text-slate-700">{{ policial.telefone ?? '—' }}</td>
-            <td class="py-2 text-slate-700">{{ companhiaNome(policial.companhia_id) }}</td>
-            <td class="py-2 text-slate-700">
+          <tr class="border-b border-slate-100 dark:border-slate-800">
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ policial.matricula }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ policial.graduacao }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ policial.nome_guerra }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ policial.telefone ?? '—' }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">{{ companhiaNome(policial.companhia_id) }}</td>
+            <td class="py-2 text-slate-700 dark:text-slate-200">
               <span
                 class="rounded-full px-2 py-0.5 text-xs font-medium"
                 [ngClass]="
                   funcaoHoje(policial.matricula) === 'P.O.'
-                    ? 'bg-slate-100 text-slate-600'
-                    : 'bg-blue-100 text-blue-700'
+                    ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
                 "
               >
                 {{ funcaoHoje(policial.matricula) }}
               </span>
             </td>
             <td class="py-2 text-right">
-              <button class="text-sm text-red-600" (click)="onRemove(policial.matricula)">Remover</button>
+              <button
+                class="text-sm text-red-600 dark:text-red-400"
+                (click)="onRemove(policial.matricula)"
+              >
+                Remover
+              </button>
             </td>
           </tr>
         }
