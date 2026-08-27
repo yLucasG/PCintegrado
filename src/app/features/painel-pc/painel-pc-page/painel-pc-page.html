@@ -6,12 +6,12 @@
   }
 
   <section
-    class="mt-6 flex flex-wrap items-center gap-3 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800"
+    class="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-white/60 bg-white/70 p-4 shadow backdrop-blur-md dark:border-slate-700/50 dark:bg-slate-900/60 dark:shadow-none"
   >
     <label class="text-sm text-slate-600 dark:text-slate-300">
       Data
       <input
-        class="ml-2 rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        class="ml-2 rounded border border-slate-300 bg-white px-3 py-2 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
         type="date"
         [ngModel]="data()"
         (ngModelChange)="onDataChange($event)"
@@ -22,7 +22,7 @@
     <div class="flex flex-wrap items-center gap-1 rounded-full border border-slate-300 p-1 dark:border-slate-700">
       <button
         type="button"
-        class="rounded-full px-3 py-1 text-sm"
+        class="rounded-full px-3 py-1 text-sm text-slate-700 dark:text-slate-300"
         [ngClass]="{ 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900': filtroHorario() === '' }"
         (click)="filtroHorario.set('')"
       >
@@ -31,7 +31,7 @@
       @for (horario of horariosDisponiveis; track horario) {
         <button
           type="button"
-          class="rounded-full px-3 py-1 text-sm"
+          class="rounded-full px-3 py-1 text-sm text-slate-700 dark:text-slate-300"
           [ngClass]="{
             'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900': filtroHorario() === horario,
           }"
@@ -43,129 +43,12 @@
     </div>
 
     <input
-      class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+      class="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
       placeholder="Buscar policial (nome ou matrícula)"
       [ngModel]="buscaPolicial()"
       (ngModelChange)="buscaPolicial.set($event)"
       name="buscaPolicial"
     />
-  </section>
-
-  <section
-    class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800"
-  >
-    <h2 class="mb-3 font-display text-lg font-medium text-slate-700 dark:text-slate-200">Registrar alteração</h2>
-    <form class="grid gap-3 sm:grid-cols-4" (ngSubmit)="onRegistrar()">
-      <select
-        class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-        [ngModel]="tipoLancamento()"
-        (ngModelChange)="tipoLancamento.set($event)"
-        name="tipoLancamento"
-      >
-        @for (tipo of tiposLancamento; track tipo) {
-          <option [value]="tipo">{{ tipo }}</option>
-        }
-      </select>
-      <select
-        class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-        required
-        [ngModel]="formPolicialMatricula()"
-        (ngModelChange)="formPolicialMatricula.set($event)"
-        name="formPolicial"
-      >
-        <option value="" disabled>
-          {{ tipoLancamento() === 'PERMUTA' ? 'Policial substituído' : 'Policial' }}
-        </option>
-        @for (policial of policiais(); track policial.matricula) {
-          <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
-        }
-      </select>
-
-      @if (tipoLancamento() === 'PERMUTA') {
-        <select
-          class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          required
-          [ngModel]="formSubstitutoMatricula()"
-          (ngModelChange)="formSubstitutoMatricula.set($event)"
-          name="formSubstituto"
-        >
-          <option value="" disabled>Policial substituto</option>
-          @for (policial of policiais(); track policial.matricula) {
-            <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
-          }
-        </select>
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          placeholder="SEI Nº"
-          [ngModel]="formSeiNumero()"
-          (ngModelChange)="formSeiNumero.set($event)"
-          name="formSei"
-        />
-      }
-
-      @if (tipoLancamento() === 'FALTA') {
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          placeholder="Motivo"
-          [ngModel]="formMotivo()"
-          (ngModelChange)="formMotivo.set($event)"
-          name="formMotivo"
-        />
-      }
-
-      @if (tipoLancamento() === 'ATRASADO') {
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          type="time"
-          [ngModel]="formHorarioChegada()"
-          (ngModelChange)="formHorarioChegada.set($event)"
-          name="formHorarioChegada"
-        />
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          placeholder="Motivo"
-          [ngModel]="formMotivo()"
-          (ngModelChange)="formMotivo.set($event)"
-          name="formMotivoAtraso"
-        />
-      }
-
-      @if (tipoLancamento() === 'FOLGA') {
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          placeholder="SEI Nº"
-          [ngModel]="formSeiNumero()"
-          (ngModelChange)="formSeiNumero.set($event)"
-          name="formSeiFolga"
-        />
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          placeholder="Autorização"
-          [ngModel]="formAutorizacao()"
-          (ngModelChange)="formAutorizacao.set($event)"
-          name="formAutorizacao"
-        />
-      }
-
-      @if (tipoLancamento() === 'REMANEJAMENTO') {
-        <input
-          class="rounded border border-slate-300 bg-white px-3 py-2 sm:col-span-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-          placeholder="Destino"
-          required
-          [ngModel]="formDestino()"
-          (ngModelChange)="formDestino.set($event)"
-          name="formDestino"
-        />
-      }
-
-      <button
-        class="rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 sm:col-span-4 dark:bg-blue-500"
-        type="submit"
-        [disabled]="registrando()"
-      >
-        Registrar
-      </button>
-    </form>
   </section>
 
   <section class="mt-6">
@@ -175,15 +58,28 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @for (card of cards; track card.guarnicaoId) {
           <div
-            class="flex flex-col rounded-lg border-l-4 bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800"
+            class="flex flex-col rounded-lg border-l-4 border border-white/60 bg-white/70 shadow backdrop-blur-md dark:border-slate-700/50 dark:bg-slate-900/50 dark:shadow-none"
             [ngClass]="corBordaCard(card)"
           >
-            <div class="mb-3">
-              <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.nome }}</h3>
-              @if (card.areaAtuacao) {
-                <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
-              }
-            </div>
+            <button
+              type="button"
+              class="flex w-full items-start justify-between gap-2 p-4 text-left"
+              (click)="toggleCard(card.guarnicaoId)"
+            >
+              <div>
+                <div class="mb-1 flex items-center gap-2">
+                  <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.nome }}</h3>
+                  <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold" [ngClass]="tipoBadgeClasses(card.tipo)">
+                    {{ card.tipo }}
+                  </span>
+                </div>
+                @if (card.areaAtuacao) {
+                  <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
+                }
+                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
+              </div>
+              <span class="shrink-0 text-slate-400 dark:text-slate-500">{{ isExpanded(card.guarnicaoId) ? '▲' : '▼' }}</span>
+            </button>
 
             <div
               cdkDropList
@@ -191,66 +87,96 @@
               [cdkDropListData]="card.rows"
               [cdkDropListConnectedTo]="dropListIds"
               (cdkDropListDropped)="onDrop($event)"
-              class="flex min-h-12 flex-1 flex-col gap-2"
+              class="flex-1 px-4 pb-4"
             >
-              @for (linha of card.rows; track linha.policialMatricula) {
-                <div
-                  cdkDrag
-                  [cdkDragData]="linha"
-                  class="flex cursor-move items-center justify-between gap-2 rounded border border-slate-200 px-2 py-2 text-sm dark:border-slate-700"
-                >
-                  <div class="flex items-center gap-2">
-                    @if (linha.funcao === 'CMT') {
-                      <span
-                        class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-900 dark:text-amber-300"
-                      >
-                        CMT
-                      </span>
-                    } @else {
-                      <span
-                        class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                      >
-                        {{ linha.funcao }}
-                      </span>
-                    }
-                    <span class="text-slate-700 dark:text-slate-200">{{
-                      policialNome(linha.policialMatricula)
-                    }}</span>
-                  </div>
-
-                  <div class="flex items-center gap-1">
-                    <span
-                      class="rounded px-2 py-0.5 text-xs font-medium"
-                      [ngClass]="statusBadgeClasses(linha.statusEfetivo)"
+              @if (isExpanded(card.guarnicaoId)) {
+                <div class="flex flex-col gap-2">
+                  @for (linha of card.rows; track linha.policialMatricula) {
+                    <div
+                      cdkDrag
+                      [cdkDragData]="linha"
+                      class="cursor-move rounded border border-slate-200/70 bg-white/50 px-2 py-2 text-sm dark:border-slate-700/60 dark:bg-slate-800/40"
                     >
-                      {{ linha.statusEfetivo }}
-                    </span>
+                      <div class="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          class="flex items-center gap-2 text-left"
+                          (click)="abrirModal(linha)"
+                        >
+                          @if (linha.funcao === 'CMT') {
+                            <span
+                              class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 dark:bg-amber-900 dark:text-amber-300"
+                            >
+                              CMT
+                            </span>
+                          } @else {
+                            <span
+                              class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                              {{ linha.funcao }}
+                            </span>
+                          }
+                          <span class="text-slate-700 hover:underline dark:text-slate-200">{{
+                            policialNome(linha.policialMatricula)
+                          }}</span>
+                        </button>
 
-                    @if (linha.statusEfetivo === 'PREVISTO') {
-                      <button
-                        type="button"
-                        class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30"
-                        title="Marcar falta"
-                        (click)="marcarFaltaRapido(linha)"
-                      >
-                        Falta
-                      </button>
-                      <button
-                        type="button"
-                        class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30"
-                        title="Marcar atrasado"
-                        (click)="marcarAtrasoRapido(linha)"
-                      >
-                        Atraso
-                      </button>
-                    }
-                  </div>
+                        <span
+                          class="rounded px-2 py-0.5 text-xs font-medium"
+                          [ngClass]="statusBadgeClasses(linha.statusEfetivo)"
+                        >
+                          {{ linha.statusEfetivo }}
+                        </span>
+                      </div>
+
+                      @if (
+                        linha.statusEfetivo === 'PREVISTO' ||
+                        linha.statusEfetivo === 'FALTA' ||
+                        linha.statusEfetivo === 'ATRASADO'
+                      ) {
+                        <div class="mt-1 flex gap-1">
+                          <button
+                            type="button"
+                            class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase hover:bg-red-50 dark:hover:bg-red-900/30"
+                            [ngClass]="
+                              linha.statusEfetivo === 'FALTA'
+                                ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                                : 'text-red-600 dark:text-red-400'
+                            "
+                            title="Marcar/desmarcar falta"
+                            (click)="toggleFalta(linha)"
+                          >
+                            Falta
+                          </button>
+                          <button
+                            type="button"
+                            class="rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase hover:bg-orange-50 dark:hover:bg-orange-900/30"
+                            [ngClass]="
+                              linha.statusEfetivo === 'ATRASADO'
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'
+                                : 'text-orange-600 dark:text-orange-400'
+                            "
+                            title="Marcar/desmarcar atraso"
+                            (click)="toggleAtraso(linha)"
+                          >
+                            Atraso
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div
+                  class="flex min-h-16 items-center justify-center rounded border border-dashed border-slate-300 text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400"
+                >
+                  Clique para expandir e ver o efetivo
                 </div>
               }
             </div>
 
             <p
-              class="mt-3 border-t border-slate-100 pt-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400"
+              class="border-t border-slate-100 px-4 py-2 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400"
             >
               {{ card.horario }}
             </p>
@@ -259,4 +185,150 @@
       </div>
     }
   </section>
+
+  @if (modalRow(); as linha) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      (click)="fecharModal()"
+    >
+      <div
+        class="w-full max-w-md rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900 dark:ring-1 dark:ring-slate-700"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="mb-4 flex items-center gap-3">
+          <div
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 font-display text-lg font-bold text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+          >
+            {{ iniciais(policialNome(linha.policialMatricula)) }}
+          </div>
+          <div>
+            <p class="font-display text-lg font-semibold text-slate-800 dark:text-slate-100">
+              {{ policialNome(linha.policialMatricula) }}
+            </p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+              Matrícula {{ linha.policialMatricula }} ·
+              {{ policialTelefone(linha.policialMatricula) ?? 'sem telefone cadastrado' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            class="ml-auto text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            (click)="fecharModal()"
+            aria-label="Fechar"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form class="grid gap-3" (ngSubmit)="onRegistrarModal()">
+          <select
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            [ngModel]="tipoLancamento()"
+            (ngModelChange)="tipoLancamento.set($event)"
+            name="modalTipo"
+          >
+            @for (tipo of tiposLancamento; track tipo) {
+              <option [value]="tipo">{{ tipo }}</option>
+            }
+          </select>
+
+          @if (tipoLancamento() === 'PERMUTA') {
+            <select
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              required
+              [ngModel]="formSubstitutoMatricula()"
+              (ngModelChange)="formSubstitutoMatricula.set($event)"
+              name="modalSubstituto"
+            >
+              <option value="" disabled>Policial substituto</option>
+              @for (policial of policiais(); track policial.matricula) {
+                <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+              }
+            </select>
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="SEI Nº"
+              [ngModel]="formSeiNumero()"
+              (ngModelChange)="formSeiNumero.set($event)"
+              name="modalSei"
+            />
+          }
+
+          @if (tipoLancamento() === 'FALTA') {
+            <textarea
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="Motivo"
+              rows="2"
+              [ngModel]="formMotivo()"
+              (ngModelChange)="formMotivo.set($event)"
+              name="modalMotivo"
+            ></textarea>
+          }
+
+          @if (tipoLancamento() === 'ATRASADO') {
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              type="time"
+              [ngModel]="formHorarioChegada()"
+              (ngModelChange)="formHorarioChegada.set($event)"
+              name="modalHorarioChegada"
+            />
+            <textarea
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="Motivo"
+              rows="2"
+              [ngModel]="formMotivo()"
+              (ngModelChange)="formMotivo.set($event)"
+              name="modalMotivoAtraso"
+            ></textarea>
+          }
+
+          @if (tipoLancamento() === 'FOLGA') {
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="SEI Nº"
+              [ngModel]="formSeiNumero()"
+              (ngModelChange)="formSeiNumero.set($event)"
+              name="modalSeiFolga"
+            />
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="Autorização"
+              [ngModel]="formAutorizacao()"
+              (ngModelChange)="formAutorizacao.set($event)"
+              name="modalAutorizacao"
+            />
+          }
+
+          @if (tipoLancamento() === 'REMANEJAMENTO') {
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="Destino"
+              required
+              [ngModel]="formDestino()"
+              (ngModelChange)="formDestino.set($event)"
+              name="modalDestino"
+            />
+          }
+
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded border border-slate-300 px-4 py-2 font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+              (click)="fecharModal()"
+            >
+              Cancelar
+            </button>
+            <button
+              class="flex-1 rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-blue-500"
+              type="submit"
+              [disabled]="registrando()"
+            >
+              Registrar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>

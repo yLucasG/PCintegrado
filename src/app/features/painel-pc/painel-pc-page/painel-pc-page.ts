@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { LancamentoService, RosterRow, StatusEfetivo } from '../../../core/services/lancamento.service';
-import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
+import { GuarnicoesService, GuarnicaoRow, TipoGuarnicao } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
 
 type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO';
@@ -11,6 +11,7 @@ type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENT
 interface CardGuarnicao {
   guarnicaoId: string;
   nome: string;
+  tipo: TipoGuarnicao;
   areaAtuacao: string | null;
   horario: string;
   rows: RosterRow[];
@@ -27,6 +28,14 @@ const STATUS_BADGE_CLASSES: Record<StatusEfetivo, string> = {
   SUBSTITUIDO: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
   FOLGA: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   REMANEJADO: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
+};
+
+const TIPO_BADGE_CLASSES: Record<TipoGuarnicao, string> = {
+  GT_TATICO: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
+  GT_ORDINARIO: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  MO: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
+  CP: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300',
+  GV: 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300',
 };
 
 @Component({
@@ -49,10 +58,11 @@ export class PainelPcPage {
 
   readonly filtroHorario = signal('');
   readonly buscaPolicial = signal('');
+  readonly expandedCardIds = signal<Set<string>>(new Set());
 
+  readonly modalRow = signal<RosterRow | null>(null);
   readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO'];
   readonly tipoLancamento = signal<TipoLancamento>('FALTA');
-  readonly formPolicialMatricula = signal('');
   readonly formSubstitutoMatricula = signal('');
   readonly formMotivo = signal('');
   readonly formSeiNumero = signal('');
@@ -98,6 +108,7 @@ export class PainelPcPage {
         grupos.set(row.guarnicaoId, {
           guarnicaoId: row.guarnicaoId,
           nome: this.guarnicaoNome(row.guarnicaoId),
+          tipo: this.guarnicaoTipo(row.guarnicaoId),
           areaAtuacao: this.guarnicaoAreaAtuacao(row.guarnicaoId),
           horario: `${row.horarioInicio}–${row.horarioFim}`,
           rows: [row],
@@ -115,11 +126,49 @@ export class PainelPcPage {
     return STATUS_BADGE_CLASSES[status];
   }
 
+  tipoBadgeClasses(tipo: TipoGuarnicao): string {
+    return TIPO_BADGE_CLASSES[tipo];
+  }
+
   corBordaCard(card: CardGuarnicao): string {
     const temProblema = card.rows.some((r) => r.statusEfetivo !== 'PREVISTO');
     return temProblema
       ? 'border-l-red-500 dark:border-l-red-400'
       : 'border-l-emerald-500 dark:border-l-emerald-400';
+  }
+
+  resumoCard(card: CardGuarnicao): string {
+    const total = card.rows.length;
+    const desvios = card.rows.filter((r) => r.statusEfetivo !== 'PREVISTO');
+    if (desvios.length === 0) {
+      return `${total} previsto${total === 1 ? '' : 's'}`;
+    }
+    const porStatus = new Map<StatusEfetivo, number>();
+    for (const r of desvios) {
+      porStatus.set(r.statusEfetivo, (porStatus.get(r.statusEfetivo) ?? 0) + 1);
+    }
+    const partes = Array.from(porStatus.entries()).map(([status, count]) => `${count} ${status.toLowerCase()}`);
+    return `${total} no total · ${partes.join(', ')}`;
+  }
+
+  isExpanded(guarnicaoId: string): boolean {
+    return this.expandedCardIds().has(guarnicaoId);
+  }
+
+  toggleCard(guarnicaoId: string): void {
+    const atual = new Set(this.expandedCardIds());
+    if (atual.has(guarnicaoId)) {
+      atual.delete(guarnicaoId);
+    } else {
+      atual.add(guarnicaoId);
+    }
+    this.expandedCardIds.set(atual);
+  }
+
+  iniciais(nome: string): string {
+    const partes = nome.trim().split(/\s+/).filter(Boolean);
+    const letras = partes.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? '');
+    return letras.join('') || '?';
   }
 
   async carregarListasBase(): Promise<void> {
@@ -156,6 +205,10 @@ export class PainelPcPage {
     return this.guarnicoes().find((g) => g.id === id)?.nome ?? '—';
   }
 
+  guarnicaoTipo(id: string): TipoGuarnicao {
+    return this.guarnicoes().find((g) => g.id === id)?.tipo ?? 'GT_ORDINARIO';
+  }
+
   guarnicaoAreaAtuacao(id: string): string | null {
     return this.guarnicoes().find((g) => g.id === id)?.area_atuacao ?? null;
   }
@@ -164,17 +217,30 @@ export class PainelPcPage {
     return this.policiais().find((p) => p.matricula === matricula)?.nome_guerra ?? matricula;
   }
 
-  private limparFormulario(): void {
-    this.formPolicialMatricula.set('');
+  policialTelefone(matricula: string): string | null {
+    return this.policiais().find((p) => p.matricula === matricula)?.telefone ?? null;
+  }
+
+  abrirModal(row: RosterRow): void {
+    this.modalRow.set(row);
+    this.tipoLancamento.set(row.statusEfetivo === 'ATRASADO' ? 'ATRASADO' : 'FALTA');
+    this.formMotivo.set(row.statusEfetivo === 'FALTA' || row.statusEfetivo === 'ATRASADO' ? (row.detalhe ?? '') : '');
     this.formSubstitutoMatricula.set('');
-    this.formMotivo.set('');
     this.formSeiNumero.set('');
     this.formAutorizacao.set('');
     this.formDestino.set('');
     this.formHorarioChegada.set('');
   }
 
-  async onRegistrar(): Promise<void> {
+  fecharModal(): void {
+    this.modalRow.set(null);
+  }
+
+  async onRegistrarModal(): Promise<void> {
+    const linha = this.modalRow();
+    if (!linha) {
+      return;
+    }
     this.registrando.set(true);
     this.errorMessage.set(null);
     try {
@@ -183,14 +249,16 @@ export class PainelPcPage {
         case 'FALTA':
           await this.lancamentoService.registrarFalta({
             data,
-            policial_matricula: this.formPolicialMatricula(),
+            policial_matricula: linha.policialMatricula,
+            escala_mensal_id: linha.escalaMensalId,
             motivo: this.formMotivo() || null,
           });
           break;
         case 'ATRASADO':
           await this.lancamentoService.registrarAtraso({
             data,
-            policial_matricula: this.formPolicialMatricula(),
+            policial_matricula: linha.policialMatricula,
+            escala_mensal_id: linha.escalaMensalId,
             horario_chegada: this.formHorarioChegada() || null,
             motivo: this.formMotivo() || null,
           });
@@ -198,15 +266,17 @@ export class PainelPcPage {
         case 'PERMUTA':
           await this.lancamentoService.registrarPermuta({
             data,
-            policial_substituido_matricula: this.formPolicialMatricula(),
+            policial_substituido_matricula: linha.policialMatricula,
             policial_substituto_matricula: this.formSubstitutoMatricula(),
+            escala_mensal_id: linha.escalaMensalId,
             sei_numero: this.formSeiNumero() || null,
           });
           break;
         case 'FOLGA':
           await this.lancamentoService.registrarFolga({
             data,
-            policial_matricula: this.formPolicialMatricula(),
+            policial_matricula: linha.policialMatricula,
+            escala_mensal_id: linha.escalaMensalId,
             sei_numero: this.formSeiNumero() || null,
             autorizacao: this.formAutorizacao() || null,
           });
@@ -214,12 +284,13 @@ export class PainelPcPage {
         case 'REMANEJAMENTO':
           await this.lancamentoService.registrarRemanejamento({
             data,
-            policial_matricula: this.formPolicialMatricula(),
+            policial_matricula: linha.policialMatricula,
+            escala_mensal_id: linha.escalaMensalId,
             destino: this.formDestino(),
           });
           break;
       }
-      this.limparFormulario();
+      this.fecharModal();
       await this.reloadRoster();
     } catch {
       this.errorMessage.set('Não foi possível registrar a alteração.');
@@ -228,29 +299,37 @@ export class PainelPcPage {
     }
   }
 
-  async marcarFaltaRapido(row: RosterRow): Promise<void> {
+  async toggleFalta(row: RosterRow): Promise<void> {
     try {
-      await this.lancamentoService.registrarFalta({
-        data: this.data(),
-        policial_matricula: row.policialMatricula,
-        escala_mensal_id: row.escalaMensalId,
-      });
+      if (row.statusEfetivo === 'FALTA' && row.detalheId) {
+        await this.lancamentoService.removerFalta(row.detalheId);
+      } else {
+        await this.lancamentoService.registrarFalta({
+          data: this.data(),
+          policial_matricula: row.policialMatricula,
+          escala_mensal_id: row.escalaMensalId,
+        });
+      }
       await this.reloadRoster();
     } catch {
-      this.errorMessage.set('Não foi possível marcar falta.');
+      this.errorMessage.set('Não foi possível atualizar a falta.');
     }
   }
 
-  async marcarAtrasoRapido(row: RosterRow): Promise<void> {
+  async toggleAtraso(row: RosterRow): Promise<void> {
     try {
-      await this.lancamentoService.registrarAtraso({
-        data: this.data(),
-        policial_matricula: row.policialMatricula,
-        escala_mensal_id: row.escalaMensalId,
-      });
+      if (row.statusEfetivo === 'ATRASADO' && row.detalheId) {
+        await this.lancamentoService.removerAtraso(row.detalheId);
+      } else {
+        await this.lancamentoService.registrarAtraso({
+          data: this.data(),
+          policial_matricula: row.policialMatricula,
+          escala_mensal_id: row.escalaMensalId,
+        });
+      }
       await this.reloadRoster();
     } catch {
-      this.errorMessage.set('Não foi possível marcar atraso.');
+      this.errorMessage.set('Não foi possível atualizar o atraso.');
     }
   }
 
