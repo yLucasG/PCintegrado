@@ -12,6 +12,7 @@ export interface RosterRow {
   horarioFim: string;
   statusEfetivo: StatusEfetivo;
   detalhe: string | null;
+  detalheId: string | null;
 }
 
 export interface RegistrarFaltaInput {
@@ -91,8 +92,8 @@ export class LancamentoService {
     if (remanejamentosRes.error) throw remanejamentosRes.error;
 
     const roster = (rosterRes.data ?? []) as RosterRpcRow[];
-    const faltas = (faltasRes.data ?? []) as { policial_matricula: string; motivo: string | null }[];
-    const atrasos = (atrasosRes.data ?? []) as { policial_matricula: string; motivo: string | null }[];
+    const faltas = (faltasRes.data ?? []) as { id: string; policial_matricula: string; motivo: string | null }[];
+    const atrasos = (atrasosRes.data ?? []) as { id: string; policial_matricula: string; motivo: string | null }[];
     const permutas = (permutasRes.data ?? []) as {
       policial_substituido_matricula: string;
       policial_substituto_matricula: string;
@@ -115,12 +116,12 @@ export class LancamentoService {
 
       const falta = faltas.find((f) => f.policial_matricula === row.policial_matricula);
       if (falta) {
-        return { ...base, statusEfetivo: 'FALTA', detalhe: falta.motivo };
+        return { ...base, statusEfetivo: 'FALTA', detalhe: falta.motivo, detalheId: falta.id };
       }
 
       const atraso = atrasos.find((a) => a.policial_matricula === row.policial_matricula);
       if (atraso) {
-        return { ...base, statusEfetivo: 'ATRASADO', detalhe: atraso.motivo };
+        return { ...base, statusEfetivo: 'ATRASADO', detalhe: atraso.motivo, detalheId: atraso.id };
       }
 
       const permuta = permutas.find((p) => p.policial_substituido_matricula === row.policial_matricula);
@@ -129,20 +130,21 @@ export class LancamentoService {
           ...base,
           statusEfetivo: 'SUBSTITUIDO',
           detalhe: `Substituído por ${permuta.policial_substituto_matricula}`,
+          detalheId: null,
         };
       }
 
       const folga = folgas.find((f) => f.policial_matricula === row.policial_matricula);
       if (folga) {
-        return { ...base, statusEfetivo: 'FOLGA', detalhe: folga.autorizacao };
+        return { ...base, statusEfetivo: 'FOLGA', detalhe: folga.autorizacao, detalheId: null };
       }
 
       const remanejamento = remanejamentos.find((r) => r.policial_matricula === row.policial_matricula);
       if (remanejamento) {
-        return { ...base, statusEfetivo: 'REMANEJADO', detalhe: remanejamento.destino };
+        return { ...base, statusEfetivo: 'REMANEJADO', detalhe: remanejamento.destino, detalheId: null };
       }
 
-      return { ...base, statusEfetivo: 'PREVISTO', detalhe: null };
+      return { ...base, statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null };
     });
   }
 
@@ -166,6 +168,16 @@ export class LancamentoService {
       horario_chegada: input.horario_chegada ?? null,
       motivo: input.motivo ?? null,
     });
+    if (error) throw error;
+  }
+
+  async removerFalta(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_faltas').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async removerAtraso(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_atrasos').delete().eq('id', id);
     if (error) throw error;
   }
 

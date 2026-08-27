@@ -1,7 +1,7 @@
 <div class="flex items-center gap-1 rounded-full border border-slate-300 p-1 dark:border-slate-700">
   <button
     type="button"
-    class="rounded-full p-1.5"
+    class="rounded-full p-1.5 text-slate-600 dark:text-slate-300"
     [ngClass]="{ 'bg-slate-200 dark:bg-slate-700': themeService.preference() === 'light' }"
     (click)="select('light')"
     aria-label="Tema claro"
@@ -15,7 +15,7 @@
   </button>
   <button
     type="button"
-    class="rounded-full p-1.5"
+    class="rounded-full p-1.5 text-slate-600 dark:text-slate-300"
     [ngClass]="{ 'bg-slate-200 dark:bg-slate-700': themeService.preference() === 'system' }"
     (click)="select('system')"
     aria-label="Tema do sistema"
@@ -27,7 +27,7 @@
   </button>
   <button
     type="button"
-    class="rounded-full p-1.5"
+    class="rounded-full p-1.5 text-slate-600 dark:text-slate-300"
     [ngClass]="{ 'bg-slate-200 dark:bg-slate-700': themeService.preference() === 'dark' }"
     (click)="select('dark')"
     aria-label="Tema escuro"

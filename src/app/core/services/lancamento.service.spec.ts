@@ -27,7 +27,7 @@ describe('LancamentoService', () => {
 
   it('marks a policial as FALTA when a matching lancamento_faltas row exists', async () => {
     const supabaseStub = buildSupabaseStub({
-      lancamento_faltas: [{ policial_matricula: '127934-3', motivo: 'Atestado médico' }],
+      lancamento_faltas: [{ id: 'falta1', policial_matricula: '127934-3', motivo: 'Atestado médico' }],
       lancamento_permutas: [],
       lancamento_folgas: [],
       lancamento_remanejamentos: [],
@@ -42,6 +42,7 @@ describe('LancamentoService', () => {
 
     expect(result[0].statusEfetivo).toBe('FALTA');
     expect(result[0].detalhe).toBe('Atestado médico');
+    expect(result[0].detalheId).toBe('falta1');
   });
 
   it('marks a policial as SUBSTITUIDO when a matching lancamento_permutas row exists', async () => {
@@ -85,7 +86,7 @@ describe('LancamentoService', () => {
     expect(result[0].detalhe).toBe('Trânsito');
   });
 
-  it('defaults to PREVISTO when there is no matching deviation row', async () => {
+  it('defaults to PREVISTO with a null detalheId when there is no matching deviation row', async () => {
     const supabaseStub = buildSupabaseStub({
       lancamento_faltas: [],
       lancamento_permutas: [],
@@ -102,6 +103,7 @@ describe('LancamentoService', () => {
 
     expect(result[0].statusEfetivo).toBe('PREVISTO');
     expect(result[0].detalhe).toBeNull();
+    expect(result[0].detalheId).toBeNull();
   });
 
   it('registers a falta via insert on lancamento_faltas', async () => {
@@ -193,5 +195,35 @@ describe('LancamentoService', () => {
     });
 
     expect(insertSpy).toHaveBeenCalledWith(expect.objectContaining({ destino: 'OP. Paz' }));
+  });
+
+  it('removes a falta by id', async () => {
+    const eqSpy = vi.fn().mockResolvedValue({ error: null });
+    const deleteSpy = vi.fn().mockReturnValue({ eq: eqSpy });
+    const supabaseStub = { client: { from: () => ({ delete: deleteSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.removerFalta('falta1');
+
+    expect(eqSpy).toHaveBeenCalledWith('id', 'falta1');
+  });
+
+  it('removes an atraso by id', async () => {
+    const eqSpy = vi.fn().mockResolvedValue({ error: null });
+    const deleteSpy = vi.fn().mockReturnValue({ eq: eqSpy });
+    const supabaseStub = { client: { from: () => ({ delete: deleteSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.removerAtraso('atraso1');
+
+    expect(eqSpy).toHaveBeenCalledWith('id', 'atraso1');
   });
 });
