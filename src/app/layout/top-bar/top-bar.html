@@ -10,6 +10,18 @@
     >
       Painel
     </a>
+    <a class="text-slate-600 hover:text-blue-600" routerLink="/policiais" routerLinkActive="text-blue-600">
+      Policiais
+    </a>
+    <a class="text-slate-600 hover:text-blue-600" routerLink="/viaturas" routerLinkActive="text-blue-600">
+      Viaturas
+    </a>
+    <a class="text-slate-600 hover:text-blue-600" routerLink="/guarnicoes" routerLinkActive="text-blue-600">
+      Guarnições
+    </a>
+    <a class="text-slate-600 hover:text-blue-600" routerLink="/escala-mensal" routerLinkActive="text-blue-600">
+      Escala Mensal
+    </a>
     @if (authService.currentPerfil?.role === 'ADMIN') {
       <a class="text-slate-600 hover:text-blue-600" routerLink="/admin" routerLinkActive="text-blue-600">
         Admin

@@ -24,6 +24,28 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN'] },
       },
+      {
+        path: 'policiais',
+        loadComponent: () =>
+          import('./features/policiais/policiais-page/policiais-page').then((m) => m.PoliciaisPage),
+      },
+      {
+        path: 'viaturas',
+        loadComponent: () =>
+          import('./features/viaturas/viaturas-page/viaturas-page').then((m) => m.ViaturasPage),
+      },
+      {
+        path: 'guarnicoes',
+        loadComponent: () =>
+          import('./features/guarnicoes/guarnicoes-page/guarnicoes-page').then((m) => m.GuarnicoesPage),
+      },
+      {
+        path: 'escala-mensal',
+        loadComponent: () =>
+          import('./features/escala-mensal/escala-mensal-page/escala-mensal-page').then(
+            (m) => m.EscalaMensalPage,
+          ),
+      },
     ],
   },
   {
