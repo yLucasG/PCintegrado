@@ -1,0 +1,129 @@
+<h1 class="text-2xl font-semibold text-slate-800">Escala Mensal</h1>
+
+@if (errorMessage()) {
+  <p class="mt-2 text-sm text-red-600">{{ errorMessage() }}</p>
+}
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  <h2 class="mb-3 text-lg font-medium text-slate-700">Nova escala</h2>
+  <form class="grid gap-3 sm:grid-cols-4" (ngSubmit)="onCreate()">
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      required
+      [ngModel]="novaGuarnicaoId()"
+      (ngModelChange)="novaGuarnicaoId.set($event)"
+      name="guarnicao"
+    >
+      <option value="" disabled>Guarnição</option>
+      @for (guarnicao of guarnicoes(); track guarnicao.id) {
+        <option [value]="guarnicao.id">{{ guarnicao.nome }}</option>
+      }
+    </select>
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      required
+      [ngModel]="novaMatricula()"
+      (ngModelChange)="novaMatricula.set($event)"
+      name="policial"
+    >
+      <option value="" disabled>Policial</option>
+      @for (policial of policiais(); track policial.matricula) {
+        <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+      }
+    </select>
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      [ngModel]="novaFuncao()"
+      (ngModelChange)="novaFuncao.set($event)"
+      name="funcao"
+    >
+      @for (funcao of funcoes; track funcao) {
+        <option [value]="funcao">{{ funcao }}</option>
+      }
+    </select>
+    <select
+      class="rounded border border-slate-300 px-3 py-2"
+      [ngModel]="novoTipoRecorrencia()"
+      (ngModelChange)="novoTipoRecorrencia.set($event)"
+      name="recorrencia"
+    >
+      @for (tipo of tiposRecorrencia; track tipo) {
+        <option [value]="tipo">{{ tipo }}</option>
+      }
+    </select>
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      type="time"
+      [ngModel]="novoHorarioInicio()"
+      (ngModelChange)="novoHorarioInicio.set($event)"
+      name="horarioInicio"
+    />
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      type="time"
+      [ngModel]="novoHorarioFim()"
+      (ngModelChange)="novoHorarioFim.set($event)"
+      name="horarioFim"
+    />
+    <input
+      class="rounded border border-slate-300 px-3 py-2"
+      type="date"
+      required
+      [ngModel]="novaVigenciaInicio()"
+      (ngModelChange)="novaVigenciaInicio.set($event)"
+      name="vigenciaInicio"
+    />
+    <button class="rounded bg-blue-600 px-4 py-2 font-medium text-white" type="submit">
+      Adicionar
+    </button>
+  </form>
+</section>
+
+<section class="mt-6 rounded-lg bg-white p-4 shadow">
+  <div class="mb-3 flex items-center gap-3">
+    <h2 class="text-lg font-medium text-slate-700">Escalas cadastradas</h2>
+    <select
+      class="rounded border border-slate-300 px-3 py-1 text-sm"
+      [ngModel]="filtroGuarnicaoId()"
+      (ngModelChange)="filtroGuarnicaoId.set($event)"
+      name="filtroGuarnicao"
+    >
+      <option value="">Todas as guarnições</option>
+      @for (guarnicao of guarnicoes(); track guarnicao.id) {
+        <option [value]="guarnicao.id">{{ guarnicao.nome }}</option>
+      }
+    </select>
+  </div>
+  @if (loading()) {
+    <p class="text-slate-500">Carregando...</p>
+  } @else {
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-slate-200 text-slate-500">
+          <th class="py-2">Guarnição</th>
+          <th class="py-2">Policial</th>
+          <th class="py-2">Função</th>
+          <th class="py-2">Horário</th>
+          <th class="py-2">Recorrência</th>
+          <th class="py-2">Vigência</th>
+          <th class="py-2"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (escala of escalasFiltradas; track escala.id) {
+          <tr class="border-b border-slate-100">
+            <td class="py-2 text-slate-700">{{ guarnicaoNome(escala.guarnicao_id) }}</td>
+            <td class="py-2 text-slate-700">{{ policialNome(escala.policial_matricula) }}</td>
+            <td class="py-2 text-slate-700">{{ escala.funcao }}</td>
+            <td class="py-2 text-slate-700">{{ escala.horario_inicio }}–{{ escala.horario_fim }}</td>
+            <td class="py-2 text-slate-700">{{ escala.tipo_recorrencia }}</td>
+            <td class="py-2 text-slate-700">{{ escala.vigencia_inicio }}</td>
+            <td class="py-2 text-right">
+              <button class="text-sm text-red-600" (click)="onRemove(escala.id)">Remover</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
