@@ -1,0 +1,37 @@
+<div class="flex min-h-screen items-center justify-center bg-slate-100">
+  <form class="w-full max-w-sm rounded-lg bg-white p-8 shadow" (ngSubmit)="onSubmit()">
+    <h1 class="mb-6 text-xl font-semibold text-slate-800">PCintegrado</h1>
+
+    <label class="mb-1 block text-sm font-medium text-slate-600">E-mail</label>
+    <input
+      class="mb-4 w-full rounded border border-slate-300 px-3 py-2"
+      type="email"
+      name="email"
+      required
+      [ngModel]="email()"
+      (ngModelChange)="email.set($event)"
+    />
+
+    <label class="mb-1 block text-sm font-medium text-slate-600">Senha</label>
+    <input
+      class="mb-4 w-full rounded border border-slate-300 px-3 py-2"
+      type="password"
+      name="password"
+      required
+      [ngModel]="password()"
+      (ngModelChange)="password.set($event)"
+    />
+
+    @if (errorMessage()) {
+      <p class="mb-4 text-sm text-red-600">{{ errorMessage() }}</p>
+    }
+
+    <button
+      class="w-full rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-50"
+      type="submit"
+      [disabled]="submitting()"
+    >
+      Entrar
+    </button>
+  </form>
+</div>
