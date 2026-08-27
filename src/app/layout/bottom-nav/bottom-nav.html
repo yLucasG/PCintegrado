@@ -1,32 +1,33 @@
 <nav
-  class="fixed inset-x-0 bottom-0 flex h-16 items-center gap-4 overflow-x-auto border-t border-slate-200 bg-white px-4 md:hidden"
+  class="fixed inset-x-0 bottom-0 flex h-16 items-center gap-4 overflow-x-auto border-t border-slate-200 bg-white px-4 md:hidden dark:border-slate-800 dark:bg-slate-950"
 >
   <a
-    class="shrink-0 text-sm text-slate-600"
+    class="shrink-0 text-sm text-slate-600 dark:text-slate-300"
     routerLink="/"
     routerLinkActive="text-blue-600"
     [routerLinkActiveOptions]="{ exact: true }"
   >
     Painel
   </a>
-  <a class="shrink-0 text-sm text-slate-600" routerLink="/lancamento" routerLinkActive="text-blue-600">
+  <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/lancamento" routerLinkActive="text-blue-600">
     Painel PC
   </a>
-  <a class="shrink-0 text-sm text-slate-600" routerLink="/policiais" routerLinkActive="text-blue-600">
+  <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/policiais" routerLinkActive="text-blue-600">
     Policiais
   </a>
-  <a class="shrink-0 text-sm text-slate-600" routerLink="/viaturas" routerLinkActive="text-blue-600">
+  <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/viaturas" routerLinkActive="text-blue-600">
     Viaturas
   </a>
-  <a class="shrink-0 text-sm text-slate-600" routerLink="/guarnicoes" routerLinkActive="text-blue-600">
+  <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/guarnicoes" routerLinkActive="text-blue-600">
     Guarnições
   </a>
-  <a class="shrink-0 text-sm text-slate-600" routerLink="/escala-mensal" routerLinkActive="text-blue-600">
+  <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/escala-mensal" routerLinkActive="text-blue-600">
     Escala
   </a>
   @if (authService.currentPerfil?.role === 'ADMIN') {
-    <a class="shrink-0 text-sm text-slate-600" routerLink="/admin" routerLinkActive="text-blue-600">
+    <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/admin" routerLinkActive="text-blue-600">
       Admin
     </a>
   }
+  <app-theme-toggle class="shrink-0" />
 </nav>

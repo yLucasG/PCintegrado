@@ -1,0 +1,39 @@
+<div class="flex items-center gap-1 rounded-full border border-slate-300 p-1 dark:border-slate-700">
+  <button
+    type="button"
+    class="rounded-full p-1.5"
+    [ngClass]="{ 'bg-slate-200 dark:bg-slate-700': themeService.preference() === 'light' }"
+    (click)="select('light')"
+    aria-label="Tema claro"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="4" />
+      <path
+        d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+      />
+    </svg>
+  </button>
+  <button
+    type="button"
+    class="rounded-full p-1.5"
+    [ngClass]="{ 'bg-slate-200 dark:bg-slate-700': themeService.preference() === 'system' }"
+    (click)="select('system')"
+    aria-label="Tema do sistema"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="4" width="20" height="13" rx="2" />
+      <path d="M8 21h8M12 17v4" />
+    </svg>
+  </button>
+  <button
+    type="button"
+    class="rounded-full p-1.5"
+    [ngClass]="{ 'bg-slate-200 dark:bg-slate-700': themeService.preference() === 'dark' }"
+    (click)="select('dark')"
+    aria-label="Tema escuro"
+  >
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
+    </svg>
+  </button>
+</div>

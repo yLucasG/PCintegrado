@@ -1,7 +1,17 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: "Chakra Petch", sans-serif;
+  --font-sans: "Inter", sans-serif;
+}
 
 html,
 body {
   height: 100%;
   margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
 }
