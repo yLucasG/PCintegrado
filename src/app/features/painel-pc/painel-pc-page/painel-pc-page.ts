@@ -3,15 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import { LancamentoService, RosterRow, StatusEfetivo } from '../../../core/services/lancamento.service';
-import { GuarnicoesService, GuarnicaoRow, TipoGuarnicao } from '../../../core/services/guarnicoes.service';
+import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
 
 type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO';
 
 interface CardGuarnicao {
+  cardId: string;
   guarnicaoId: string;
   nome: string;
-  tipo: TipoGuarnicao;
   areaAtuacao: string | null;
   horario: string;
   rows: RosterRow[];
@@ -30,12 +30,13 @@ const STATUS_BADGE_CLASSES: Record<StatusEfetivo, string> = {
   REMANEJADO: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
 };
 
-const TIPO_BADGE_CLASSES: Record<TipoGuarnicao, string> = {
-  GT_TATICO: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
-  GT_ORDINARIO: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  MO: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
-  CP: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300',
-  GV: 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300',
+const STATUS_LABELS: Record<StatusEfetivo, string> = {
+  PREVISTO: 'Presente',
+  FALTA: 'Falta',
+  ATRASADO: 'Atrasado',
+  SUBSTITUIDO: 'Substituído',
+  FOLGA: 'Folga',
+  REMANEJADO: 'Remanejado',
 };
 
 @Component({
@@ -58,7 +59,6 @@ export class PainelPcPage {
 
   readonly filtroHorario = signal('');
   readonly buscaPolicial = signal('');
-  readonly expandedCardIds = signal<Set<string>>(new Set());
 
   readonly modalRow = signal<RosterRow | null>(null);
   readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO'];
@@ -99,35 +99,42 @@ export class PainelPcPage {
   }
 
   get cards(): CardGuarnicao[] {
+    // Grouped by guarnição *and* horário: a guarnição can have more than one
+    // shift active on the same recorrência (e.g. a day shift and a night
+    // shift both flagged ÍMPARES), and those are different postos — merging
+    // them would show two "commanders" on one card.
     const grupos = new Map<string, CardGuarnicao>();
     for (const row of this.rosterFiltrado) {
-      const existente = grupos.get(row.guarnicaoId);
+      const cardId = `${row.guarnicaoId}__${row.horarioInicio}`;
+      const existente = grupos.get(cardId);
       if (existente) {
         existente.rows.push(row);
       } else {
-        grupos.set(row.guarnicaoId, {
+        grupos.set(cardId, {
+          cardId,
           guarnicaoId: row.guarnicaoId,
           nome: this.guarnicaoNome(row.guarnicaoId),
-          tipo: this.guarnicaoTipo(row.guarnicaoId),
           areaAtuacao: this.guarnicaoAreaAtuacao(row.guarnicaoId),
           horario: `${row.horarioInicio}–${row.horarioFim}`,
           rows: [row],
         });
       }
     }
-    return Array.from(grupos.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+    return Array.from(grupos.values()).sort(
+      (a, b) => a.nome.localeCompare(b.nome) || a.horario.localeCompare(b.horario),
+    );
   }
 
   get dropListIds(): string[] {
-    return this.cards.map((c) => c.guarnicaoId);
+    return this.cards.map((c) => c.cardId);
   }
 
   statusBadgeClasses(status: StatusEfetivo): string {
     return STATUS_BADGE_CLASSES[status];
   }
 
-  tipoBadgeClasses(tipo: TipoGuarnicao): string {
-    return TIPO_BADGE_CLASSES[tipo];
+  statusLabel(status: StatusEfetivo): string {
+    return STATUS_LABELS[status];
   }
 
   corBordaCard(card: CardGuarnicao): string {
@@ -141,28 +148,16 @@ export class PainelPcPage {
     const total = card.rows.length;
     const desvios = card.rows.filter((r) => r.statusEfetivo !== 'PREVISTO');
     if (desvios.length === 0) {
-      return `${total} previsto${total === 1 ? '' : 's'}`;
+      return `${total} presente${total === 1 ? '' : 's'}`;
     }
     const porStatus = new Map<StatusEfetivo, number>();
     for (const r of desvios) {
       porStatus.set(r.statusEfetivo, (porStatus.get(r.statusEfetivo) ?? 0) + 1);
     }
-    const partes = Array.from(porStatus.entries()).map(([status, count]) => `${count} ${status.toLowerCase()}`);
+    const partes = Array.from(porStatus.entries()).map(
+      ([status, count]) => `${count} ${this.statusLabel(status).toLowerCase()}`,
+    );
     return `${total} no total · ${partes.join(', ')}`;
-  }
-
-  isExpanded(guarnicaoId: string): boolean {
-    return this.expandedCardIds().has(guarnicaoId);
-  }
-
-  toggleCard(guarnicaoId: string): void {
-    const atual = new Set(this.expandedCardIds());
-    if (atual.has(guarnicaoId)) {
-      atual.delete(guarnicaoId);
-    } else {
-      atual.add(guarnicaoId);
-    }
-    this.expandedCardIds.set(atual);
   }
 
   iniciais(nome: string): string {
@@ -203,10 +198,6 @@ export class PainelPcPage {
 
   guarnicaoNome(id: string): string {
     return this.guarnicoes().find((g) => g.id === id)?.nome ?? '—';
-  }
-
-  guarnicaoTipo(id: string): TipoGuarnicao {
-    return this.guarnicoes().find((g) => g.id === id)?.tipo ?? 'GT_ORDINARIO';
   }
 
   guarnicaoAreaAtuacao(id: string): string | null {
@@ -338,8 +329,11 @@ export class PainelPcPage {
       return;
     }
     const row = event.item.data;
-    const destinoGuarnicaoId = event.container.id;
-    const destinoNome = this.guarnicaoNome(destinoGuarnicaoId);
+    const cardDestino = this.cards.find((c) => c.cardId === event.container.id);
+    if (!cardDestino) {
+      return;
+    }
+    const destinoNome = cardDestino.nome;
     try {
       await this.lancamentoService.registrarRemanejamento({
         data: this.data(),
