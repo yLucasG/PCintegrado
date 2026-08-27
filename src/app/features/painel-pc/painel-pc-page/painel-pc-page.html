@@ -146,6 +146,18 @@
                         </button>
                       </div>
                     }
+                    @if (linha.statusEfetivo === 'REMANEJADO') {
+                      <div class="mt-1">
+                        <button
+                          type="button"
+                          class="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-violet-700 hover:bg-violet-200 dark:bg-violet-900 dark:text-violet-300 dark:hover:bg-violet-800"
+                          title="Desfazer remanejamento"
+                          (click)="toggleRemanejamento(linha)"
+                        >
+                          Desfazer remanejamento
+                        </button>
+                      </div>
+                    }
                   </div>
                 }
               </div>

@@ -66,6 +66,26 @@ describe('LancamentoService', () => {
     expect(result[0].detalhe).toContain('999999-9');
   });
 
+  it('marks a policial as REMANEJADO with a detalheId when a matching lancamento_remanejamentos row exists', async () => {
+    const supabaseStub = buildSupabaseStub({
+      lancamento_faltas: [],
+      lancamento_permutas: [],
+      lancamento_folgas: [],
+      lancamento_remanejamentos: [{ id: 'remanejamento1', policial_matricula: '127934-3', destino: 'GT 16332' }],
+    });
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listRosterDoDia('2026-08-04');
+
+    expect(result[0].statusEfetivo).toBe('REMANEJADO');
+    expect(result[0].detalhe).toBe('GT 16332');
+    expect(result[0].detalheId).toBe('remanejamento1');
+  });
+
   it('marks a policial as ATRASADO when a matching lancamento_atrasos row exists', async () => {
     const supabaseStub = buildSupabaseStub({
       lancamento_faltas: [],
@@ -225,5 +245,20 @@ describe('LancamentoService', () => {
     await service.removerAtraso('atraso1');
 
     expect(eqSpy).toHaveBeenCalledWith('id', 'atraso1');
+  });
+
+  it('removes a remanejamento by id', async () => {
+    const eqSpy = vi.fn().mockResolvedValue({ error: null });
+    const deleteSpy = vi.fn().mockReturnValue({ eq: eqSpy });
+    const supabaseStub = { client: { from: () => ({ delete: deleteSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.removerRemanejamento('remanejamento1');
+
+    expect(eqSpy).toHaveBeenCalledWith('id', 'remanejamento1');
   });
 });

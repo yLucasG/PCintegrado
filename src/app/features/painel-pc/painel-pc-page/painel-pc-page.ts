@@ -104,25 +104,46 @@ export class PainelPcPage {
     // shift both flagged ÍMPARES), and those are different postos — merging
     // them would show two "commanders" on one card.
     const grupos = new Map<string, CardGuarnicao>();
+    const cardIdOrigem = new Map<RosterRow, string>();
+
     for (const row of this.rosterFiltrado) {
       const cardId = `${row.guarnicaoId}__${row.horarioInicio}`;
-      const existente = grupos.get(cardId);
-      if (existente) {
-        existente.rows.push(row);
-      } else {
+      cardIdOrigem.set(row, cardId);
+      if (!grupos.has(cardId)) {
         grupos.set(cardId, {
           cardId,
           guarnicaoId: row.guarnicaoId,
           nome: this.guarnicaoNome(row.guarnicaoId),
           areaAtuacao: this.guarnicaoAreaAtuacao(row.guarnicaoId),
           horario: `${row.horarioInicio}–${row.horarioFim}`,
-          rows: [row],
+          rows: [],
         });
       }
     }
-    return Array.from(grupos.values()).sort(
-      (a, b) => a.nome.localeCompare(b.nome) || a.horario.localeCompare(b.horario),
-    );
+
+    // A REMANEJADO row is displayed on its destination card (matched by
+    // guarnição nome, preferring the card sharing the same horário) instead
+    // of its original card — otherwise it would look like the drag-and-drop
+    // silently did nothing.
+    for (const row of this.rosterFiltrado) {
+      const cardOrigemId = cardIdOrigem.get(row)!;
+      let cardAlvo = grupos.get(cardOrigemId)!;
+
+      if (row.statusEfetivo === 'REMANEJADO' && row.detalhe) {
+        const candidatos = Array.from(grupos.values()).filter((c) => c.nome === row.detalhe);
+        const destino =
+          candidatos.find((c) => c.horario === cardAlvo.horario) ?? candidatos[0];
+        if (destino) {
+          cardAlvo = destino;
+        }
+      }
+
+      cardAlvo.rows.push(row);
+    }
+
+    return Array.from(grupos.values())
+      .filter((c) => c.rows.length > 0)
+      .sort((a, b) => a.nome.localeCompare(b.nome) || a.horario.localeCompare(b.horario));
   }
 
   get dropListIds(): string[] {
@@ -321,6 +342,18 @@ export class PainelPcPage {
       await this.reloadRoster();
     } catch {
       this.errorMessage.set('Não foi possível atualizar o atraso.');
+    }
+  }
+
+  async toggleRemanejamento(row: RosterRow): Promise<void> {
+    if (!row.detalheId) {
+      return;
+    }
+    try {
+      await this.lancamentoService.removerRemanejamento(row.detalheId);
+      await this.reloadRoster();
+    } catch {
+      this.errorMessage.set('Não foi possível desfazer o remanejamento.');
     }
   }
 

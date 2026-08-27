@@ -100,6 +100,7 @@ export class LancamentoService {
     }[];
     const folgas = (folgasRes.data ?? []) as { policial_matricula: string; autorizacao: string | null }[];
     const remanejamentos = (remanejamentosRes.data ?? []) as {
+      id: string;
       policial_matricula: string;
       destino: string;
     }[];
@@ -141,7 +142,12 @@ export class LancamentoService {
 
       const remanejamento = remanejamentos.find((r) => r.policial_matricula === row.policial_matricula);
       if (remanejamento) {
-        return { ...base, statusEfetivo: 'REMANEJADO', detalhe: remanejamento.destino, detalheId: null };
+        return {
+          ...base,
+          statusEfetivo: 'REMANEJADO',
+          detalhe: remanejamento.destino,
+          detalheId: remanejamento.id,
+        };
       }
 
       return { ...base, statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null };
@@ -178,6 +184,11 @@ export class LancamentoService {
 
   async removerAtraso(id: string): Promise<void> {
     const { error } = await this.supabase.client.from('lancamento_atrasos').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async removerRemanejamento(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_remanejamentos').delete().eq('id', id);
     if (error) throw error;
   }
 
