@@ -69,7 +69,7 @@
             class="flex flex-col rounded-lg border-l-4 border border-white/60 bg-white/70 shadow backdrop-blur-md transition-opacity dark:border-slate-700/50 dark:bg-slate-900/50 dark:shadow-none"
             [ngClass]="[corBordaCard(card), isBaixada(card) ? 'opacity-50 grayscale' : '']"
           >
-            <div class="flex items-start justify-between gap-2 p-4">
+            <div class="p-4">
               <button
                 type="button"
                 class="text-left"
@@ -86,25 +86,28 @@
                     </span>
                   }
                 </div>
+              </button>
+
+              <div class="flex items-center gap-2">
                 @if (card.areaAtuacao) {
                   <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
                 }
-                <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
-              </button>
+                <button
+                  type="button"
+                  class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                  [ngClass]="
+                    osDoCard(card)
+                      ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300'
+                      : 'border border-dashed border-slate-300 text-slate-400 dark:border-slate-600 dark:text-slate-500'
+                  "
+                  title="Ordem de Serviço"
+                  (click)="abrirOs(card)"
+                >
+                  {{ osDoCard(card)?.numeroOs || 'OS' }}
+                </button>
+              </div>
 
-              <button
-                type="button"
-                class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
-                [ngClass]="
-                  osDoCard(card)
-                    ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300'
-                    : 'border border-dashed border-slate-300 text-slate-400 dark:border-slate-600 dark:text-slate-500'
-                "
-                title="Ordem de Serviço"
-                (click)="abrirOs(card)"
-              >
-                {{ osDoCard(card)?.numeroOs || 'OS' }}
-              </button>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
             </div>
 
             <div
