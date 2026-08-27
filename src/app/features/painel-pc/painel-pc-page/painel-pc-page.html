@@ -58,22 +58,37 @@
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         @for (card of cards; track card.cardId) {
           <div
-            class="flex flex-col rounded-lg border-l-4 border border-white/60 bg-white/70 shadow backdrop-blur-md dark:border-slate-700/50 dark:bg-slate-900/50 dark:shadow-none"
-            [ngClass]="corBordaCard(card)"
+            class="flex flex-col rounded-lg border-l-4 border border-white/60 bg-white/70 shadow backdrop-blur-md transition-opacity dark:border-slate-700/50 dark:bg-slate-900/50 dark:shadow-none"
+            [ngClass]="[corBordaCard(card), isBaixada(card) ? 'opacity-50 grayscale' : '']"
           >
-            <div class="p-4">
-              <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.nome }}</h3>
+            <button
+              type="button"
+              class="p-4 text-left"
+              title="Clique para ativar/desativar esta viatura"
+              (click)="toggleBaixa(card)"
+            >
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.nome }}</h3>
+                @if (isBaixada(card)) {
+                  <span
+                    class="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                  >
+                    Desativada
+                  </span>
+                }
+              </div>
               @if (card.areaAtuacao) {
                 <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
               }
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
-            </div>
+            </button>
 
             <div
               cdkDropList
               [id]="card.cardId"
               [cdkDropListData]="card.rows"
               [cdkDropListConnectedTo]="dropListIds"
+              [cdkDropListDisabled]="isBaixada(card)"
               (cdkDropListDropped)="onDrop($event)"
               class="flex-1 px-4 pb-4"
             >

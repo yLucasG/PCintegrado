@@ -61,6 +61,20 @@ export interface RegistrarRemanejamentoInput {
   destino: string;
 }
 
+export interface BaixaRow {
+  id: string;
+  guarnicaoId: string;
+  horarioInicio: string;
+  motivo: string | null;
+}
+
+export interface RegistrarBaixaInput {
+  data: string;
+  guarnicao_id: string;
+  horario_inicio: string;
+  motivo?: string | null;
+}
+
 interface RosterRpcRow {
   id: string;
   guarnicao_id: string;
@@ -227,6 +241,37 @@ export class LancamentoService {
       horario_fim: input.horario_fim ?? null,
       destino: input.destino,
     });
+    if (error) throw error;
+  }
+
+  async listBaixasDoDia(data: string): Promise<BaixaRow[]> {
+    const { data: rows, error } = await this.supabase.client
+      .from('lancamento_baixas')
+      .select('*')
+      .eq('data', data);
+    if (error) throw error;
+    return (
+      (rows ?? []) as { id: string; guarnicao_id: string; horario_inicio: string; motivo: string | null }[]
+    ).map((r) => ({
+      id: r.id,
+      guarnicaoId: r.guarnicao_id,
+      horarioInicio: r.horario_inicio,
+      motivo: r.motivo,
+    }));
+  }
+
+  async registrarBaixa(input: RegistrarBaixaInput): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_baixas').insert({
+      data: input.data,
+      guarnicao_id: input.guarnicao_id,
+      horario_inicio: input.horario_inicio,
+      motivo: input.motivo ?? null,
+    });
+    if (error) throw error;
+  }
+
+  async removerBaixa(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_baixas').delete().eq('id', id);
     if (error) throw error;
   }
 }

@@ -2,7 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
-import { LancamentoService, RosterRow, StatusEfetivo } from '../../../core/services/lancamento.service';
+import { BaixaRow, LancamentoService, RosterRow, StatusEfetivo } from '../../../core/services/lancamento.service';
 import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
 
@@ -13,6 +13,7 @@ interface CardGuarnicao {
   guarnicaoId: string;
   nome: string;
   areaAtuacao: string | null;
+  horarioInicio: string;
   horario: string;
   rows: RosterRow[];
 }
@@ -52,6 +53,7 @@ export class PainelPcPage {
 
   readonly data = signal(hojeIso());
   readonly roster = signal<RosterRow[]>([]);
+  readonly baixas = signal<BaixaRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
   readonly policiais = signal<PolicialRow[]>([]);
   readonly loading = signal(true);
@@ -74,6 +76,7 @@ export class PainelPcPage {
   constructor() {
     void this.carregarListasBase();
     void this.reloadRoster();
+    void this.reloadBaixas();
   }
 
   get horariosDisponiveis(): string[] {
@@ -115,6 +118,7 @@ export class PainelPcPage {
           guarnicaoId: row.guarnicaoId,
           nome: this.guarnicaoNome(row.guarnicaoId),
           areaAtuacao: this.guarnicaoAreaAtuacao(row.guarnicaoId),
+          horarioInicio: row.horarioInicio,
           horario: `${row.horarioInicio}–${row.horarioFim}`,
           rows: [],
         });
@@ -159,10 +163,43 @@ export class PainelPcPage {
   }
 
   corBordaCard(card: CardGuarnicao): string {
+    if (this.isBaixada(card)) {
+      return 'border-l-slate-400 dark:border-l-slate-600';
+    }
     const temProblema = card.rows.some((r) => r.statusEfetivo !== 'PREVISTO');
     return temProblema
       ? 'border-l-red-500 dark:border-l-red-400'
       : 'border-l-emerald-500 dark:border-l-emerald-400';
+  }
+
+  isBaixada(card: CardGuarnicao): boolean {
+    return this.baixas().some(
+      (b) => b.guarnicaoId === card.guarnicaoId && b.horarioInicio === card.horarioInicio,
+    );
+  }
+
+  private baixaDoCard(card: CardGuarnicao): BaixaRow | undefined {
+    return this.baixas().find(
+      (b) => b.guarnicaoId === card.guarnicaoId && b.horarioInicio === card.horarioInicio,
+    );
+  }
+
+  async toggleBaixa(card: CardGuarnicao): Promise<void> {
+    try {
+      const baixa = this.baixaDoCard(card);
+      if (baixa) {
+        await this.lancamentoService.removerBaixa(baixa.id);
+      } else {
+        await this.lancamentoService.registrarBaixa({
+          data: this.data(),
+          guarnicao_id: card.guarnicaoId,
+          horario_inicio: card.horarioInicio,
+        });
+      }
+      await this.reloadBaixas();
+    } catch {
+      this.errorMessage.set('Não foi possível atualizar o status da viatura.');
+    }
   }
 
   resumoCard(card: CardGuarnicao): string {
@@ -212,9 +249,17 @@ export class PainelPcPage {
     }
   }
 
+  async reloadBaixas(): Promise<void> {
+    try {
+      this.baixas.set(await this.lancamentoService.listBaixasDoDia(this.data()));
+    } catch {
+      this.errorMessage.set('Não foi possível carregar as viaturas baixadas.');
+    }
+  }
+
   async onDataChange(novaData: string): Promise<void> {
     this.data.set(novaData);
-    await this.reloadRoster();
+    await Promise.all([this.reloadRoster(), this.reloadBaixas()]);
   }
 
   guarnicaoNome(id: string): string {

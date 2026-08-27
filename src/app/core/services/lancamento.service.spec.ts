@@ -261,4 +261,57 @@ describe('LancamentoService', () => {
 
     expect(eqSpy).toHaveBeenCalledWith('id', 'remanejamento1');
   });
+
+  it('lists baixas for a given day', async () => {
+    const rows = [{ id: 'baixa1', guarnicao_id: 'g1', horario_inicio: '06:00:00', motivo: 'Sem efetivo' }];
+    const supabaseStub = {
+      client: {
+        from: () => ({
+          select: () => ({ eq: () => Promise.resolve({ data: rows, error: null }) }),
+        }),
+      },
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listBaixasDoDia('2026-08-04');
+
+    expect(result).toEqual([
+      { id: 'baixa1', guarnicaoId: 'g1', horarioInicio: '06:00:00', motivo: 'Sem efetivo' },
+    ]);
+  });
+
+  it('registers a baixa via insert on lancamento_baixas', async () => {
+    const insertSpy = vi.fn().mockResolvedValue({ error: null });
+    const supabaseStub = { client: { from: () => ({ insert: insertSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.registrarBaixa({ data: '2026-08-04', guarnicao_id: 'g1', horario_inicio: '06:00:00' });
+
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ guarnicao_id: 'g1', horario_inicio: '06:00:00' }),
+    );
+  });
+
+  it('removes a baixa by id', async () => {
+    const eqSpy = vi.fn().mockResolvedValue({ error: null });
+    const deleteSpy = vi.fn().mockReturnValue({ eq: eqSpy });
+    const supabaseStub = { client: { from: () => ({ delete: deleteSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.removerBaixa('baixa1');
+
+    expect(eqSpy).toHaveBeenCalledWith('id', 'baixa1');
+  });
 });
