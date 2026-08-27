@@ -1,9 +1,5 @@
--- Reference copy of the schema. The CLI only applies files under
--- supabase/migrations/ (see 20260827000000_initial_schema.sql, same
--- content) — this file is kept for readability; edit both together, or
--- future changes should go straight into new migration files instead.
---
--- Already applied to the linked project (2026-08-27) via:
+-- Deploy with:
+--   supabase login
 --   supabase link --project-ref lyeoxvvhwdhwrscnvwhl
 --   supabase db push
 

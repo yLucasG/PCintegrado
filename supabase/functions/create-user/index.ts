@@ -1,7 +1,7 @@
-// Deploy with:
-//   supabase login
+// Redeploy after changes with:
 //   supabase link --project-ref lyeoxvvhwdhwrscnvwhl
 //   supabase functions deploy create-user
+// (already deployed to the linked project on 2026-08-27)
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
