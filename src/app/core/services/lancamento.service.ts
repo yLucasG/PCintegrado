@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
-export type StatusEfetivo = 'PREVISTO' | 'FALTA' | 'SUBSTITUIDO' | 'FOLGA' | 'REMANEJADO';
+export type StatusEfetivo = 'PREVISTO' | 'FALTA' | 'ATRASADO' | 'SUBSTITUIDO' | 'FOLGA' | 'REMANEJADO';
 
 export interface RosterRow {
   escalaMensalId: string;
@@ -20,6 +20,14 @@ export interface RegistrarFaltaInput {
   escala_mensal_id?: string | null;
   horario_inicio?: string | null;
   horario_fim?: string | null;
+  motivo?: string | null;
+}
+
+export interface RegistrarAtrasoInput {
+  data: string;
+  policial_matricula: string;
+  escala_mensal_id?: string | null;
+  horario_chegada?: string | null;
   motivo?: string | null;
 }
 
@@ -66,9 +74,10 @@ export class LancamentoService {
   private readonly supabase = inject(SupabaseService);
 
   async listRosterDoDia(data: string): Promise<RosterRow[]> {
-    const [rosterRes, faltasRes, permutasRes, folgasRes, remanejamentosRes] = await Promise.all([
+    const [rosterRes, faltasRes, atrasosRes, permutasRes, folgasRes, remanejamentosRes] = await Promise.all([
       this.supabase.client.rpc('fn_resolve_escala_dia', { p_data: data }),
       this.supabase.client.from('lancamento_faltas').select('*').eq('data', data),
+      this.supabase.client.from('lancamento_atrasos').select('*').eq('data', data),
       this.supabase.client.from('lancamento_permutas').select('*').eq('data', data),
       this.supabase.client.from('lancamento_folgas').select('*').eq('data', data),
       this.supabase.client.from('lancamento_remanejamentos').select('*').eq('data', data),
@@ -76,12 +85,14 @@ export class LancamentoService {
 
     if (rosterRes.error) throw rosterRes.error;
     if (faltasRes.error) throw faltasRes.error;
+    if (atrasosRes.error) throw atrasosRes.error;
     if (permutasRes.error) throw permutasRes.error;
     if (folgasRes.error) throw folgasRes.error;
     if (remanejamentosRes.error) throw remanejamentosRes.error;
 
     const roster = (rosterRes.data ?? []) as RosterRpcRow[];
     const faltas = (faltasRes.data ?? []) as { policial_matricula: string; motivo: string | null }[];
+    const atrasos = (atrasosRes.data ?? []) as { policial_matricula: string; motivo: string | null }[];
     const permutas = (permutasRes.data ?? []) as {
       policial_substituido_matricula: string;
       policial_substituto_matricula: string;
@@ -105,6 +116,11 @@ export class LancamentoService {
       const falta = faltas.find((f) => f.policial_matricula === row.policial_matricula);
       if (falta) {
         return { ...base, statusEfetivo: 'FALTA', detalhe: falta.motivo };
+      }
+
+      const atraso = atrasos.find((a) => a.policial_matricula === row.policial_matricula);
+      if (atraso) {
+        return { ...base, statusEfetivo: 'ATRASADO', detalhe: atraso.motivo };
       }
 
       const permuta = permutas.find((p) => p.policial_substituido_matricula === row.policial_matricula);
@@ -137,6 +153,17 @@ export class LancamentoService {
       escala_mensal_id: input.escala_mensal_id ?? null,
       horario_inicio: input.horario_inicio ?? null,
       horario_fim: input.horario_fim ?? null,
+      motivo: input.motivo ?? null,
+    });
+    if (error) throw error;
+  }
+
+  async registrarAtraso(input: RegistrarAtrasoInput): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_atrasos').insert({
+      data: input.data,
+      policial_matricula: input.policial_matricula,
+      escala_mensal_id: input.escala_mensal_id ?? null,
+      horario_chegada: input.horario_chegada ?? null,
       motivo: input.motivo ?? null,
     });
     if (error) throw error;

@@ -65,6 +65,26 @@ describe('LancamentoService', () => {
     expect(result[0].detalhe).toContain('999999-9');
   });
 
+  it('marks a policial as ATRASADO when a matching lancamento_atrasos row exists', async () => {
+    const supabaseStub = buildSupabaseStub({
+      lancamento_faltas: [],
+      lancamento_atrasos: [{ policial_matricula: '127934-3', motivo: 'Trânsito' }],
+      lancamento_permutas: [],
+      lancamento_folgas: [],
+      lancamento_remanejamentos: [],
+    });
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listRosterDoDia('2026-08-04');
+
+    expect(result[0].statusEfetivo).toBe('ATRASADO');
+    expect(result[0].detalhe).toBe('Trânsito');
+  });
+
   it('defaults to PREVISTO when there is no matching deviation row', async () => {
     const supabaseStub = buildSupabaseStub({
       lancamento_faltas: [],
@@ -97,6 +117,26 @@ describe('LancamentoService', () => {
 
     expect(insertSpy).toHaveBeenCalledWith(
       expect.objectContaining({ data: '2026-08-04', policial_matricula: '127934-3', motivo: 'Doente' }),
+    );
+  });
+
+  it('registers an atraso via insert on lancamento_atrasos', async () => {
+    const insertSpy = vi.fn().mockResolvedValue({ error: null });
+    const supabaseStub = { client: { from: () => ({ insert: insertSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.registrarAtraso({
+      data: '2026-08-04',
+      policial_matricula: '127934-3',
+      horario_chegada: '07:15',
+    });
+
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ policial_matricula: '127934-3', horario_chegada: '07:15' }),
     );
   });
 
