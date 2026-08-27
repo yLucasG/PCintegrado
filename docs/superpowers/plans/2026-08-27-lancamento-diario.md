@@ -1,3 +1,5 @@
+> **Status (2026-08-27): All 5 tasks executed and verified.** 39/39 tests passing, production build green, migration deployed to the live Supabase project, end-to-end verified against real 3ª CPM data (registered a test `lancamento_faltas` row, confirmed it's queryable for the day, cleaned it up). SEI report generator and LTS/DTS tracking remain for a follow-up.
+
 # Lançamento Diário / Painel do PC Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
