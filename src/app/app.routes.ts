@@ -25,6 +25,11 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'] },
       },
       {
+        path: 'lancamento',
+        loadComponent: () =>
+          import('./features/painel-pc/painel-pc-page/painel-pc-page').then((m) => m.PainelPcPage),
+      },
+      {
         path: 'policiais',
         loadComponent: () =>
           import('./features/policiais/policiais-page/policiais-page').then((m) => m.PoliciaisPage),
