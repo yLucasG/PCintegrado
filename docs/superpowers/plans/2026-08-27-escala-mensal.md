@@ -1,3 +1,5 @@
+> **Status (2026-08-27): All 9 tasks executed and verified.** 31/31 tests passing, production build green, both migrations deployed to the live Supabase project, `fn_resolve_escala_dia` verified against real 3ª CPM data (PARES/IMPARES filtering and a `vigencia_inicio` edge case both confirmed correct via live RPC calls). 1ª CPM, 2ª CPM, and PCTAT data import remains for a follow-up pass.
+
 # Dados Mestres + Escala Mensal Recorrente Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
