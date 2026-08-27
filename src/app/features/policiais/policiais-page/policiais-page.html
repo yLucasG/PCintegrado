@@ -70,6 +70,7 @@
           <th class="py-2">Nome de guerra</th>
           <th class="py-2">Telefone</th>
           <th class="py-2">Companhia</th>
+          <th class="py-2">Função</th>
           <th class="py-2"></th>
         </tr>
       </thead>
@@ -81,6 +82,18 @@
             <td class="py-2 text-slate-700">{{ policial.nome_guerra }}</td>
             <td class="py-2 text-slate-700">{{ policial.telefone ?? '—' }}</td>
             <td class="py-2 text-slate-700">{{ companhiaNome(policial.companhia_id) }}</td>
+            <td class="py-2 text-slate-700">
+              <span
+                class="rounded-full px-2 py-0.5 text-xs font-medium"
+                [ngClass]="
+                  funcaoHoje(policial.matricula) === 'P.O.'
+                    ? 'bg-slate-100 text-slate-600'
+                    : 'bg-blue-100 text-blue-700'
+                "
+              >
+                {{ funcaoHoje(policial.matricula) }}
+              </span>
+            </td>
             <td class="py-2 text-right">
               <button class="text-sm text-red-600" (click)="onRemove(policial.matricula)">Remover</button>
             </td>

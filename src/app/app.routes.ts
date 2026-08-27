@@ -38,11 +38,15 @@ export const routes: Routes = [
         path: 'viaturas',
         loadComponent: () =>
           import('./features/viaturas/viaturas-page/viaturas-page').then((m) => m.ViaturasPage),
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'] },
       },
       {
         path: 'guarnicoes',
         loadComponent: () =>
           import('./features/guarnicoes/guarnicoes-page/guarnicoes-page').then((m) => m.GuarnicoesPage),
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'] },
       },
       {
         path: 'escala-mensal',
@@ -50,6 +54,8 @@ export const routes: Routes = [
           import('./features/escala-mensal/escala-mensal-page/escala-mensal-page').then(
             (m) => m.EscalaMensalPage,
           ),
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'] },
       },
     ],
   },

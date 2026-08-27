@@ -18,15 +18,17 @@
     <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/policiais" routerLinkActive="text-blue-600">
       Policiais
     </a>
-    <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/viaturas" routerLinkActive="text-blue-600">
-      Viaturas
-    </a>
-    <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/guarnicoes" routerLinkActive="text-blue-600">
-      Guarnições
-    </a>
-    <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/escala-mensal" routerLinkActive="text-blue-600">
-      Escala Mensal
-    </a>
+    @if (podeGerenciarEscalas()) {
+      <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/viaturas" routerLinkActive="text-blue-600">
+        Viaturas
+      </a>
+      <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/guarnicoes" routerLinkActive="text-blue-600">
+        Guarnições
+      </a>
+      <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/escala-mensal" routerLinkActive="text-blue-600">
+        Escala Mensal
+      </a>
+    }
     @if (authService.currentPerfil?.role === 'ADMIN') {
       <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/admin" routerLinkActive="text-blue-600">
         Admin
