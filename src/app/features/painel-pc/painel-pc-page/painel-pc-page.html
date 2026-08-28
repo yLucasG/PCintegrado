@@ -326,6 +326,13 @@
               (ngModelChange)="formMotivo.set($event)"
               name="modalMotivoAtraso"
             ></textarea>
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="SEI Nº"
+              [ngModel]="formSeiNumero()"
+              (ngModelChange)="formSeiNumero.set($event)"
+              name="modalSeiAtraso"
+            />
           }
 
           @if (tipoLancamento() === 'FOLGA') {
@@ -582,6 +589,20 @@
             (ngModelChange)="osTexto.set($event)"
             name="osTexto"
           />
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Situação (descreva a missão)"
+            [ngModel]="osSituacao()"
+            (ngModelChange)="osSituacao.set($event)"
+            name="osSituacao"
+          />
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Local"
+            [ngModel]="osLocal()"
+            (ngModelChange)="osLocal.set($event)"
+            name="osLocal"
+          />
           <p class="text-xs text-slate-400 dark:text-slate-500">Deixe em branco e salve para remover a OS.</p>
 
           <div class="flex gap-2">
@@ -598,6 +619,53 @@
               [disabled]="salvandoOs()"
             >
               Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (baixaModalCard(); as card) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="fecharBaixa()">
+      <div
+        class="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-slate-900 dark:ring-1 dark:ring-slate-700"
+        (click)="$event.stopPropagation()"
+      >
+        <h2 class="font-display text-lg font-semibold text-slate-800 dark:text-slate-100">Desativar viatura</h2>
+        <p class="mb-4 text-xs text-slate-500 dark:text-slate-400">{{ card.nome }}</p>
+
+        <form class="grid gap-3" (ngSubmit)="onSalvarBaixa()">
+          <textarea
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="Motivo"
+            rows="2"
+            [ngModel]="baixaMotivo()"
+            (ngModelChange)="baixaMotivo.set($event)"
+            name="baixaMotivo"
+          ></textarea>
+          <input
+            class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            placeholder="SEI Nº"
+            [ngModel]="baixaSeiNumero()"
+            (ngModelChange)="baixaSeiNumero.set($event)"
+            name="baixaSeiNumero"
+          />
+
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="flex-1 rounded border border-slate-300 px-4 py-2 font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+              (click)="fecharBaixa()"
+            >
+              Cancelar
+            </button>
+            <button
+              class="flex-1 rounded bg-red-600 px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-red-500"
+              type="submit"
+              [disabled]="salvandoBaixa()"
+            >
+              Desativar
             </button>
           </div>
         </form>

@@ -93,7 +93,14 @@ export class PainelPcPage {
 
   readonly osModalCard = signal<CardGuarnicao | null>(null);
   readonly osTexto = signal('');
+  readonly osSituacao = signal('');
+  readonly osLocal = signal('');
   readonly salvandoOs = signal(false);
+
+  readonly baixaModalCard = signal<CardGuarnicao | null>(null);
+  readonly baixaMotivo = signal('');
+  readonly baixaSeiNumero = signal('');
+  readonly salvandoBaixa = signal(false);
 
   readonly modalRow = signal<RosterRow | null>(null);
   readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO', 'LICENCA'];
@@ -221,20 +228,46 @@ export class PainelPcPage {
   }
 
   async toggleBaixa(card: CardGuarnicao): Promise<void> {
-    try {
-      const baixa = this.baixaDoCard(card);
-      if (baixa) {
+    const baixa = this.baixaDoCard(card);
+    if (baixa) {
+      try {
         await this.lancamentoService.removerBaixa(baixa.id);
-      } else {
-        await this.lancamentoService.registrarBaixa({
-          data: this.data(),
-          guarnicao_id: card.guarnicaoId,
-          horario_inicio: card.horarioInicio,
-        });
+        await this.reloadBaixas();
+      } catch {
+        this.errorMessage.set('Não foi possível reativar a viatura.');
       }
+      return;
+    }
+    this.baixaModalCard.set(card);
+    this.baixaMotivo.set('');
+    this.baixaSeiNumero.set('');
+  }
+
+  fecharBaixa(): void {
+    this.baixaModalCard.set(null);
+  }
+
+  async onSalvarBaixa(): Promise<void> {
+    const card = this.baixaModalCard();
+    if (!card) {
+      return;
+    }
+    this.salvandoBaixa.set(true);
+    this.errorMessage.set(null);
+    try {
+      await this.lancamentoService.registrarBaixa({
+        data: this.data(),
+        guarnicao_id: card.guarnicaoId,
+        horario_inicio: card.horarioInicio,
+        motivo: this.baixaMotivo() || null,
+        sei_numero: this.baixaSeiNumero() || null,
+      });
+      this.fecharBaixa();
       await this.reloadBaixas();
     } catch {
-      this.errorMessage.set('Não foi possível atualizar o status da viatura.');
+      this.errorMessage.set('Não foi possível desativar a viatura.');
+    } finally {
+      this.salvandoBaixa.set(false);
     }
   }
 
@@ -314,7 +347,10 @@ export class PainelPcPage {
 
   abrirOs(card: CardGuarnicao): void {
     this.osModalCard.set(card);
-    this.osTexto.set(this.osDoCard(card)?.numeroOs ?? '');
+    const existente = this.osDoCard(card);
+    this.osTexto.set(existente?.numeroOs ?? '');
+    this.osSituacao.set(existente?.situacao ?? '');
+    this.osLocal.set(existente?.local ?? '');
   }
 
   fecharOs(): void {
@@ -340,6 +376,8 @@ export class PainelPcPage {
           guarnicao_id: card.guarnicaoId,
           horario_inicio: card.horarioInicio,
           numero_os: texto,
+          situacao: this.osSituacao() || null,
+          local: this.osLocal() || null,
         });
       }
       this.fecharOs();
@@ -413,6 +451,7 @@ export class PainelPcPage {
             escala_mensal_id: linha.escalaMensalId,
             horario_chegada: this.formHorarioChegada() || null,
             motivo: this.formMotivo() || null,
+            sei_numero: this.formSeiNumero() || null,
           });
           break;
         case 'PERMUTA':
