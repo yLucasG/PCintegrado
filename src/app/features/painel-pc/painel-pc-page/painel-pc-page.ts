@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { CdkDrag, CdkDragDrop, CdkDropList } from '@angular/cdk/drag-drop';
 import {
   BaixaRow,
+  FuncaoFixaRow,
+  GrupoFuncaoFixa,
   LancamentoService,
   OsRow,
   RosterRow,
@@ -115,11 +117,22 @@ export class PainelPcPage {
   readonly formLicencaFim = signal('');
   readonly registrando = signal(false);
 
+  readonly funcoesFixas = signal<FuncaoFixaRow[]>([]);
+  readonly gruposFuncaoFixa: GrupoFuncaoFixa[] = ['GUARDA', 'PC_BPM', 'COPOM'];
+  readonly novaFuncaoFixaGrupo = signal<GrupoFuncaoFixa>('GUARDA');
+  readonly novaFuncaoFixaFuncao = signal('');
+  readonly novaFuncaoFixaHorarioInicio = signal('06:00');
+  readonly novaFuncaoFixaHorarioFim = signal('06:00');
+  readonly novaFuncaoFixaMatricula = signal('');
+  readonly novaFuncaoFixaFoneCmt = signal('');
+  readonly criandoFuncaoFixa = signal(false);
+
   constructor() {
     void this.carregarListasBase();
     void this.reloadRoster();
     void this.reloadBaixas();
     void this.reloadOs();
+    void this.reloadFuncoesFixas();
   }
 
   get horariosDisponiveis(): string[] {
@@ -338,7 +351,52 @@ export class PainelPcPage {
 
   async onDataChange(novaData: string): Promise<void> {
     this.data.set(novaData);
-    await Promise.all([this.reloadRoster(), this.reloadBaixas(), this.reloadOs()]);
+    await Promise.all([this.reloadRoster(), this.reloadBaixas(), this.reloadOs(), this.reloadFuncoesFixas()]);
+  }
+
+  async reloadFuncoesFixas(): Promise<void> {
+    try {
+      this.funcoesFixas.set(await this.lancamentoService.listFuncoesFixasDoDia(this.data()));
+    } catch {
+      this.errorMessage.set('Não foi possível carregar as funções fixas do dia.');
+    }
+  }
+
+  funcoesFixasDoGrupo(grupo: GrupoFuncaoFixa): FuncaoFixaRow[] {
+    return this.funcoesFixas().filter((f) => f.grupo === grupo);
+  }
+
+  async onCriarFuncaoFixa(): Promise<void> {
+    this.criandoFuncaoFixa.set(true);
+    this.errorMessage.set(null);
+    try {
+      await this.lancamentoService.registrarFuncaoFixa({
+        data: this.data(),
+        grupo: this.novaFuncaoFixaGrupo(),
+        funcao: this.novaFuncaoFixaFuncao(),
+        horario_inicio: this.novaFuncaoFixaHorarioInicio(),
+        horario_fim: this.novaFuncaoFixaHorarioFim(),
+        policial_matricula: this.novaFuncaoFixaMatricula(),
+        fone_cmt: this.novaFuncaoFixaFoneCmt() || null,
+      });
+      this.novaFuncaoFixaFuncao.set('');
+      this.novaFuncaoFixaMatricula.set('');
+      this.novaFuncaoFixaFoneCmt.set('');
+      await this.reloadFuncoesFixas();
+    } catch {
+      this.errorMessage.set('Não foi possível registrar a função fixa.');
+    } finally {
+      this.criandoFuncaoFixa.set(false);
+    }
+  }
+
+  async onRemoverFuncaoFixa(id: string): Promise<void> {
+    try {
+      await this.lancamentoService.removerFuncaoFixa(id);
+      await this.reloadFuncoesFixas();
+    } catch {
+      this.errorMessage.set('Não foi possível remover a função fixa.');
+    }
   }
 
   osDoCard(card: CardGuarnicao): OsRow | undefined {

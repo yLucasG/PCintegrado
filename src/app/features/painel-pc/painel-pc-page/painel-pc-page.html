@@ -231,6 +231,93 @@
     }
   </section>
 
+  <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+    <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Funções fixas do dia</h2>
+
+    <form class="mb-4 grid gap-2 sm:grid-cols-6" (ngSubmit)="onCriarFuncaoFixa()">
+      <select
+        class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        [ngModel]="novaFuncaoFixaGrupo()"
+        (ngModelChange)="novaFuncaoFixaGrupo.set($event)"
+        name="novaFuncaoFixaGrupo"
+      >
+        @for (grupo of gruposFuncaoFixa; track grupo) {
+          <option [value]="grupo">{{ grupo }}</option>
+        }
+      </select>
+      <input
+        class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        placeholder="Função (ex: Comandante)"
+        required
+        [ngModel]="novaFuncaoFixaFuncao()"
+        (ngModelChange)="novaFuncaoFixaFuncao.set($event)"
+        name="novaFuncaoFixaFuncao"
+      />
+      <input
+        class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        type="time"
+        [ngModel]="novaFuncaoFixaHorarioInicio()"
+        (ngModelChange)="novaFuncaoFixaHorarioInicio.set($event)"
+        name="novaFuncaoFixaHorarioInicio"
+      />
+      <input
+        class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        type="time"
+        [ngModel]="novaFuncaoFixaHorarioFim()"
+        (ngModelChange)="novaFuncaoFixaHorarioFim.set($event)"
+        name="novaFuncaoFixaHorarioFim"
+      />
+      <select
+        class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        required
+        [ngModel]="novaFuncaoFixaMatricula()"
+        (ngModelChange)="novaFuncaoFixaMatricula.set($event)"
+        name="novaFuncaoFixaMatricula"
+      >
+        <option value="" disabled>Policial</option>
+        @for (policial of policiais(); track policial.matricula) {
+          <option [value]="policial.matricula">{{ policial.nome_guerra }}</option>
+        }
+      </select>
+      <button
+        class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-blue-500"
+        type="submit"
+        [disabled]="criandoFuncaoFixa()"
+      >
+        + Adicionar
+      </button>
+    </form>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      @for (grupo of gruposFuncaoFixa; track grupo) {
+        <div>
+          <p class="mb-1 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">{{ grupo }}</p>
+          @if (funcoesFixasDoGrupo(grupo).length === 0) {
+            <p class="text-xs text-slate-400 dark:text-slate-500">Nenhuma função lançada.</p>
+          } @else {
+            <ul class="flex flex-col gap-1">
+              @for (f of funcoesFixasDoGrupo(grupo); track f.id) {
+                <li class="flex items-center justify-between rounded border border-slate-200 px-2 py-1 text-xs dark:border-slate-800">
+                  <span class="text-slate-700 dark:text-slate-200">
+                    {{ f.funcao }} — {{ policialNome(f.policialMatricula) }} ({{ f.horarioInicio.slice(0, 5) }}–{{ f.horarioFim.slice(0, 5) }})
+                  </span>
+                  <button
+                    type="button"
+                    class="text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                    title="Remover"
+                    (click)="onRemoverFuncaoFixa(f.id)"
+                  >
+                    ✕
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
   @if (modalRow(); as linha) {
     <div
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
