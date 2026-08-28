@@ -15,12 +15,16 @@
       <button
         type="button"
         class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white dark:bg-blue-500"
-        (click)="copiarTexto()"
+        (click)="copiarRelatorio()"
       >
-        {{ copiado() ? 'Copiado!' : 'Copiar texto' }}
+        {{ copiado() ? 'Copiado!' : 'Copiar para o SEI' }}
       </button>
     </div>
   </div>
+
+  <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    "Copiar para o SEI" coloca o relatório na área de transferência como tabelas. Cole direto no editor do SEI (Ctrl+V).
+  </p>
 
   @if (errorMessage()) {
     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
@@ -29,129 +33,11 @@
   @if (loading()) {
     <p class="mt-6 text-slate-500 dark:text-slate-400">Carregando...</p>
   } @else {
-    <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-      <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Ordinário — Resumo</h2>
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        @for (item of resumoPorTipo; track item.tipo) {
-          <div class="rounded bg-slate-50 p-3 text-center dark:bg-slate-800">
-            <p class="text-xl font-bold text-slate-800 dark:text-slate-100">{{ item.total }}</p>
-            <p class="text-xs text-slate-500 dark:text-slate-400">{{ item.tipo }}</p>
-          </div>
-        }
-      </div>
-    </section>
-
-    @for (chamada of chamadas; track chamada.horarioInicio; let i = $index) {
-      <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">
-          {{ chamadaOrdinal(i) }} Chamada — {{ chamada.horarioInicio.slice(0, 5) }}
-        </h2>
-        <div class="flex flex-col gap-3">
-          @for (card of chamada.cards; track card.cardId) {
-            <div class="rounded border border-slate-200 dark:border-slate-800">
-              <p class="bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                {{ card.nome }} @if (card.areaAtuacao) { — {{ card.areaAtuacao }} }
-              </p>
-              <table class="w-full text-left text-sm">
-                <tbody>
-                  @for (row of card.rows; track row.policialMatricula) {
-                    <tr class="border-t border-slate-100 dark:border-slate-800">
-                      <td class="px-3 py-1 text-slate-500 dark:text-slate-400">{{ row.funcao }}</td>
-                      <td class="px-3 py-1 text-slate-700 dark:text-slate-200">{{ row.policialMatricula }}</td>
-                      <td class="px-3 py-1 text-slate-700 dark:text-slate-200">{{ policialNome(row.policialMatricula) }}</td>
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
-        </div>
-      </section>
-    }
-
-    <section class="mt-6 grid gap-4 sm:grid-cols-2">
-      <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Faltas</h2>
-        @for (r of faltas; track r.policialMatricula) {
-          <p class="text-sm text-slate-700 dark:text-slate-200">{{ policialNome(r.policialMatricula) }} — {{ r.detalhe }}</p>
-        } @empty {
-          <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-        }
-      </div>
-      <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Permutas/Substituição</h2>
-        @for (r of substituidos; track r.policialMatricula) {
-          <p class="text-sm text-slate-700 dark:text-slate-200">{{ policialNome(r.policialMatricula) }} — {{ r.detalhe }}</p>
-        } @empty {
-          <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-        }
-      </div>
-      <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Folgas</h2>
-        @for (r of folgas; track r.policialMatricula) {
-          <p class="text-sm text-slate-700 dark:text-slate-200">{{ policialNome(r.policialMatricula) }} — {{ r.detalhe }}</p>
-        } @empty {
-          <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-        }
-      </div>
-      <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">LTS/DTS</h2>
-        @for (r of licencas; track r.policialMatricula) {
-          <p class="text-sm text-slate-700 dark:text-slate-200">{{ policialNome(r.policialMatricula) }} — {{ r.detalhe }}</p>
-        } @empty {
-          <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-        }
-      </div>
-      <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Remanejamento de Efetivo</h2>
-        @for (r of remanejados; track r.policialMatricula) {
-          <p class="text-sm text-slate-700 dark:text-slate-200">{{ policialNome(r.policialMatricula) }} — destino: {{ r.detalhe }}</p>
-        } @empty {
-          <p class="text-sm text-slate-400 dark:text-slate-500">Nenhum.</p>
-        }
-      </div>
-      <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-        <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Viaturas Baixadas</h2>
-        @for (b of viaturasBaixadas; track b.id) {
-          <p class="text-sm text-slate-700 dark:text-slate-200">
-            {{ guarnicao(b.guarnicaoId)?.nome }} — {{ b.motivo }} @if (b.seiNumero) { (SEI {{ b.seiNumero }}) }
-          </p>
-        } @empty {
-          <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-        }
-      </div>
-    </section>
-
-    <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-      <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">"OS" Cumpridas</h2>
-      @for (o of osCumpridas; track o.id) {
-        <p class="text-sm text-slate-700 dark:text-slate-200">
-          {{ o.numeroOs }} — {{ guarnicao(o.guarnicaoId)?.nome }} @if (o.situacao) { — {{ o.situacao }} } @if (o.local) { — {{ o.local }} }
-        </p>
-      } @empty {
-        <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-      }
-    </section>
-
-    <section class="mt-6 grid gap-4 sm:grid-cols-3">
-      @for (grupo of gruposFuncaoFixa; track grupo) {
-        <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-          <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">{{ grupo }}</h2>
-          @for (f of funcoesDoGrupo(grupo); track f.id) {
-            <p class="text-sm text-slate-700 dark:text-slate-200">
-              {{ f.funcao }} — {{ policialNome(f.policialMatricula) }} ({{ f.horarioInicio.slice(0, 5) }}–{{ f.horarioFim.slice(0, 5) }})
-            </p>
-          } @empty {
-            <p class="text-sm text-slate-400 dark:text-slate-500">Nenhuma.</p>
-          }
-        </div>
-      }
-    </section>
-
     <section class="mt-6 grid gap-4">
+      <h2 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Seções de texto livre</h2>
       @for (item of camposComplemento; track item.campo) {
         <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
-          <h2 class="mb-2 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">{{ item.titulo }}</h2>
+          <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ item.titulo }}</label>
           <textarea
             class="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
             rows="3"
@@ -162,6 +48,13 @@
           ></textarea>
         </div>
       }
+    </section>
+
+    <section class="mt-6">
+      <h2 class="mb-3 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Pré-visualização</h2>
+      <div class="relatorio-preview overflow-x-auto rounded-lg bg-white p-6 shadow dark:bg-white">
+        <div [innerHTML]="relatorioPreview"></div>
+      </div>
     </section>
   }
 </div>

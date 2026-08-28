@@ -1,11 +1,25 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { GuarnicaoRow, TipoGuarnicao } from './guarnicoes.service';
+import { PolicialRow } from './policiais.service';
+import { BaixaRow, FuncaoFixaRow, GrupoFuncaoFixa, OsRow, RosterRow } from './lancamento.service';
 
 export type CampoComplemento = 'PJES_DIARIA' | 'FISCALIZACAO' | 'POG' | 'DIRESP' | 'OBSERVACOES';
 
 export interface ComplementoRow {
   campo: CampoComplemento;
   conteudo: string;
+}
+
+export interface RelatorioSeiInput {
+  data: string;
+  guarnicoes: GuarnicaoRow[];
+  policiais: PolicialRow[];
+  roster: RosterRow[];
+  baixas: BaixaRow[];
+  osRows: OsRow[];
+  funcoesFixas: FuncaoFixaRow[];
+  complementos: Record<CampoComplemento, string>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -27,4 +41,391 @@ export class RelatorioSeiService {
       .upsert({ data, campo, conteudo }, { onConflict: 'data,campo' });
     if (error) throw error;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Geração do relatório em HTML (tabelas com estilo inline, colável no editor
+// CKEditor do SEI, que descarta classes mas preserva tabelas e estilos inline).
+// ---------------------------------------------------------------------------
+
+const ROTULO_TIPO: Record<TipoGuarnicao, string> = {
+  GT_TATICO: 'GTS',
+  GT_ORDINARIO: "GS'S",
+  MO: "MO'S",
+  CP: 'CP',
+  GV: 'GV',
+  GG: 'GG',
+  CR: 'CR',
+};
+
+const GRUPOS_FIXOS: { grupo: GrupoFuncaoFixa; titulo: string }[] = [
+  { grupo: 'GUARDA', titulo: 'GUARDA' },
+  { grupo: 'PC_BPM', titulo: 'PC 16º BPM' },
+  { grupo: 'COPOM', titulo: 'GRADUADO MONITORAMENTO COPOM' },
+];
+
+const CAMPOS_TEXTO: { campo: CampoComplemento; titulo: string }[] = [
+  { campo: 'PJES_DIARIA', titulo: 'PJES / DIÁRIA' },
+  { campo: 'FISCALIZACAO', titulo: 'FISCALIZAÇÃO' },
+  { campo: 'POG', titulo: 'POG' },
+  { campo: 'DIRESP', titulo: 'VIATURAS DIRESP ATIVADAS NA ÁREA EM APOIO A OPERAÇÕES DO 16º BPM' },
+  { campo: 'OBSERVACOES', titulo: 'OBSERVAÇÕES' },
+];
+
+const ORDINAIS = ['1ª', '2ª', '3ª', '4ª', '5ª', '6ª', '7ª', '8ª'];
+
+const S_TABELA = 'border-collapse:collapse;width:100%;font-family:Calibri,Arial,sans-serif;font-size:11pt;margin:6pt 0;';
+const S_CEL = 'border:1px solid #000;padding:3pt 5pt;vertical-align:top;';
+const S_TH = S_CEL + 'background-color:#e6e6e6;font-weight:bold;text-align:center;';
+const S_SECAO = S_CEL + 'background-color:#d9d9d9;font-weight:bold;text-transform:uppercase;text-align:center;';
+const S_TITULO = 'font-family:Calibri,Arial,sans-serif;font-size:12pt;font-weight:bold;text-transform:uppercase;text-align:center;margin:12pt 0 4pt;';
+const S_PARAGRAFO = 'font-family:Calibri,Arial,sans-serif;font-size:12pt;text-align:justify;margin:4pt 0;';
+
+function esc(valor: string | null | undefined): string {
+  return (valor ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function hhmm(hora: string | null | undefined): string {
+  return (hora ?? '').slice(0, 5);
+}
+
+function turno(inicio: string, fim: string): string {
+  return `${hhmm(inicio)}–${hhmm(fim)}`;
+}
+
+interface CardRelatorio {
+  guarnicao: GuarnicaoRow;
+  horarioInicio: string;
+  horarioFim: string;
+  rows: RosterRow[];
+}
+
+/** Serializa todos os dados do dia no HTML do relatório de lançamento. */
+export function montarRelatorioHtml(input: RelatorioSeiInput): string {
+  const guarnicaoPorId = new Map(input.guarnicoes.map((g) => [g.id, g]));
+  const policialPorMatricula = new Map(input.policiais.map((p) => [p.matricula, p]));
+
+  const nomeCompleto = (matricula: string): string => {
+    const p = policialPorMatricula.get(matricula);
+    return p ? `${p.graduacao} ${p.nome_guerra}` : matricula;
+  };
+  const guarnicaoNome = (id: string): string => guarnicaoPorId.get(id)?.nome ?? id;
+
+  // --- Cards ordinários (viaturas motorizadas, exceto baixadas) --------------
+  const baixados = new Set(input.baixas.map((b) => `${b.guarnicaoId}__${b.horarioInicio}`));
+  const cardsPorId = new Map<string, CardRelatorio>();
+  for (const row of input.roster) {
+    const guarnicao = guarnicaoPorId.get(row.guarnicaoId);
+    if (!guarnicao || !(guarnicao.tipo in ROTULO_TIPO)) continue;
+    const cardId = `${row.guarnicaoId}__${row.horarioInicio}`;
+    if (baixados.has(cardId)) continue;
+    if (!cardsPorId.has(cardId)) {
+      cardsPorId.set(cardId, {
+        guarnicao,
+        horarioInicio: row.horarioInicio,
+        horarioFim: row.horarioFim,
+        rows: [],
+      });
+    }
+    cardsPorId.get(cardId)!.rows.push(row);
+  }
+  const cards = Array.from(cardsPorId.values()).sort((a, b) =>
+    a.guarnicao.nome.localeCompare(b.guarnicao.nome),
+  );
+
+  // --- Contagem por tipo (rótulos do modelo) --------------------------------
+  const resumo = (Object.keys(ROTULO_TIPO) as TipoGuarnicao[]).map((tipo) => ({
+    rotulo: ROTULO_TIPO[tipo],
+    total: cards.filter((c) => c.guarnicao.tipo === tipo).length,
+  }));
+
+  // --- Alterações a partir do roster ---------------------------------------
+  const porStatus = (status: RosterRow['statusEfetivo']) =>
+    input.roster.filter((r) => r.statusEfetivo === status);
+  const faltas = porStatus('FALTA');
+  const substituidos = porStatus('SUBSTITUIDO');
+  const folgas = porStatus('FOLGA');
+  const licencas = porStatus('LICENCA');
+  const remanejados = porStatus('REMANEJADO');
+  const osCumpridas = input.osRows.filter((o) => o.numeroOs);
+
+  const osDaGuarnicao = (guarnicaoId: string, horarioInicio: string): string => {
+    const os = input.osRows.find(
+      (o) => o.guarnicaoId === guarnicaoId && o.horarioInicio === horarioInicio && o.numeroOs,
+    );
+    return os?.numeroOs ?? '';
+  };
+  const foneCmtDoCard = (card: CardRelatorio): string => {
+    const cmt = card.rows.find((r) => r.funcao === 'CMT') ?? card.rows[0];
+    return cmt ? policialPorMatricula.get(cmt.policialMatricula)?.telefone ?? '' : '';
+  };
+
+  const out: string[] = [];
+
+  // Carta de encaminhamento -------------------------------------------------
+  out.push(`<p style="${S_PARAGRAFO}">À Sr.ª SUBCOMANDANTE DO 16º BPM</p>`);
+  out.push(
+    `<p style="${S_PARAGRAFO}"><b>Assunto:</b> Remessa de relatório de lançamento de viatura e efetivo.</p>`,
+  );
+  out.push(
+    `<p style="${S_PARAGRAFO}">Cumprimentando inicialmente V. S.ª, faço remessa do relatório de ` +
+      `lançamento de serviço do dia ${esc(input.data)}, das [06:00h às 18:00h / 18:00h às 06:00h], ` +
+      `para conhecimento e providências que julgue necessárias.</p>`,
+  );
+  out.push(
+    `<p style="${S_PARAGRAFO}">Sem mais, aproveitamos o ensejo para renovar nossas elevadas estima e consideração.</p>`,
+  );
+
+  out.push(`<p style="${S_TITULO}">RELATÓRIO DE LANÇAMENTO</p>`);
+
+  // ORDINÁRIO -------------------------------------------------------------
+  out.push(`<p style="${S_TITULO}">ORDINÁRIO</p>`);
+  const servico: [string, number | string][] = [
+    ['FALTAS', faltas.length],
+    ['LTS / DTS', licencas.length],
+    ['PERMUTAS', substituidos.length],
+    ['FOLGAS', folgas.length],
+    ['REMANEJAMENTO/SUBSTITUIÇÃO', remanejados.length + substituidos.length],
+    ["VT'S/MO'S DESATIVADAS", input.baixas.length],
+    ['VIATURA FORA DA ÁREA EM MISSÃO', ''],
+    ['QUANTIDADE DE "OS" CUMPRIDA', osCumpridas.length],
+  ];
+  const linhasResumo = Math.max(resumo.length, servico.length);
+  const corpoResumo: string[] = [];
+  for (let i = 0; i < linhasResumo; i++) {
+    const r = resumo[i];
+    const s = servico[i];
+    corpoResumo.push(
+      `<tr>` +
+        `<td style="${S_CEL}">${r ? esc(r.rotulo) : ''}</td>` +
+        `<td style="${S_CEL}text-align:center;">${r ? r.total : ''}</td>` +
+        `<td style="${S_CEL}">${s ? esc(s[0]) : ''}</td>` +
+        `<td style="${S_CEL}text-align:center;">${s ? esc(String(s[1])) : ''}</td>` +
+        `</tr>`,
+    );
+  }
+  out.push(
+    `<table style="${S_TABELA}"><thead><tr>` +
+      `<th style="${S_TH}" colspan="2">TOTAL DE LANÇAMENTOS</th>` +
+      `<th style="${S_TH}" colspan="2">SERVIÇO EM GERAL</th>` +
+      `</tr></thead><tbody>${corpoResumo.join('')}</tbody></table>`,
+  );
+
+  // PJES / DIÁRIA (texto livre) -----------------------------------------
+  out.push(secaoTexto('PJES / DIÁRIA', input.complementos.PJES_DIARIA));
+
+  // "OS" CUMPRIDAS -----------------------------------------------------
+  out.push(`<p style="${S_TITULO}">"OS" CUMPRIDAS</p>`);
+  out.push(
+    tabela(
+      ['Nº DA OS', 'SITUAÇÃO', 'LOCAL', 'VIATURA QUE CUMPRIU'],
+      osCumpridas.length
+        ? osCumpridas.map((o) => [
+            esc(o.numeroOs),
+            esc(o.situacao),
+            esc(o.local),
+            esc(guarnicaoNome(o.guarnicaoId)),
+          ])
+        : [['-', '-', '-', '-']],
+    ),
+  );
+
+  // CHAMADAS ---------------------------------------------------------
+  const chamadas = new Map<string, CardRelatorio[]>();
+  for (const card of cards) {
+    if (!chamadas.has(card.horarioInicio)) chamadas.set(card.horarioInicio, []);
+    chamadas.get(card.horarioInicio)!.push(card);
+  }
+  const chamadasOrdenadas = Array.from(chamadas.entries()).sort(([a], [b]) => a.localeCompare(b));
+  chamadasOrdenadas.forEach(([horario, cardsDaChamada], index) => {
+    out.push(`<p style="${S_TITULO}">${ORDINAIS[index] ?? `${index + 1}ª`} CHAMADA — ${hhmm(horario)}</p>`);
+    for (const card of cardsDaChamada) {
+      const fone = esc(foneCmtDoCard(card));
+      const prefixos = esc((card.guarnicao.prefixos ?? []).join(' / '));
+      const area = esc(card.guarnicao.area_atuacao);
+      const os = esc(osDaGuarnicao(card.guarnicao.id, card.horarioInicio));
+      const corpo = card.rows
+        .map(
+          (r) =>
+            `<tr>` +
+            `<td style="${S_CEL}"></td>` +
+            `<td style="${S_CEL}">${prefixos}</td>` +
+            `<td style="${S_CEL}">${turno(card.horarioInicio, card.horarioFim)}</td>` +
+            `<td style="${S_CEL}">${area}</td>` +
+            `<td style="${S_CEL}">${os}</td>` +
+            `<td style="${S_CEL}">${esc(r.policialMatricula)}</td>` +
+            `<td style="${S_CEL}">${esc(nomeCompleto(r.policialMatricula))}</td>` +
+            `<td style="${S_CEL}">${fone}</td>` +
+            `</tr>`,
+        )
+        .join('');
+      out.push(
+        `<table style="${S_TABELA}"><tbody>` +
+          `<tr><td style="${S_SECAO}" colspan="8">${esc(card.guarnicao.nome)}</td></tr>` +
+          `<tr>` +
+          ['PATRIMÔNIO', 'PREFIXO', 'HORÁRIO', 'ÁREA DE ATUAÇÃO', 'ORDEM DE SERVIÇO', 'MATRÍCULA', 'NOME', 'FONE DO CMT']
+            .map((h) => `<td style="${S_TH}">${h}</td>`)
+            .join('') +
+          `</tr>${corpo}</tbody></table>`,
+      );
+    }
+  });
+
+  // FISCALIZAÇÃO / POG (texto livre) -----------------------------------
+  out.push(secaoTexto('FISCALIZAÇÃO', input.complementos.FISCALIZACAO));
+  out.push(secaoTexto('POG', input.complementos.POG));
+
+  // GUARDA / PC 16º BPM / COPOM --------------------------------------
+  for (const { grupo, titulo } of GRUPOS_FIXOS) {
+    const funcoes = input.funcoesFixas.filter((f) => f.grupo === grupo);
+    out.push(`<p style="${S_TITULO}">${titulo}</p>`);
+    out.push(
+      tabela(
+        ['FUNÇÃO', 'HORÁRIO', 'MAT', 'EFETIVO', 'FONE DO CMT'],
+        funcoes.length
+          ? funcoes.map((f) => [
+              esc(f.funcao),
+              turno(f.horarioInicio, f.horarioFim),
+              esc(f.policialMatricula),
+              esc(nomeCompleto(f.policialMatricula)),
+              esc(f.foneCmt),
+            ])
+          : [['-', '-', '-', '-', '-']],
+      ),
+    );
+  }
+
+  // ALTERAÇÕES DE SERVIÇO ORDINÁRIO --------------------------------
+  out.push(`<p style="${S_TITULO}">ALTERAÇÕES DE SERVIÇO ORDINÁRIO</p>`);
+
+  out.push(`<p style="${S_TITULO}">FALTAS</p>`);
+  out.push(
+    tabela(
+      ['QTD', 'MATRÍCULA', 'NOME', 'HORÁRIO', 'ESCALA', 'MOTIVO'],
+      faltas.length
+        ? faltas.map((r, i) => [
+            String(i + 1),
+            esc(r.policialMatricula),
+            esc(nomeCompleto(r.policialMatricula)),
+            turno(r.horarioInicio, r.horarioFim),
+            esc(guarnicaoNome(r.guarnicaoId)),
+            esc(r.detalhe),
+          ])
+        : [['-', '-', '-', '-', '-', '-']],
+    ),
+  );
+
+  out.push(`<p style="${S_TITULO}">LTS / DTS</p>`);
+  out.push(
+    tabela(
+      ['QTD', 'MATRÍCULA', 'NOME', 'PERÍODO', 'ESCALA', 'SEI Nº'],
+      licencas.length
+        ? licencas.map((r, i) => [
+            String(i + 1),
+            esc(r.policialMatricula),
+            esc(nomeCompleto(r.policialMatricula)),
+            esc(r.detalhe),
+            esc(guarnicaoNome(r.guarnicaoId)),
+            '',
+          ])
+        : [['-', '-', '-', '-', '-', '-']],
+    ),
+  );
+
+  out.push(`<p style="${S_TITULO}">PERMUTAS / SUBSTITUIÇÃO DE SERVIÇO</p>`);
+  out.push(
+    tabela(
+      ['QTD', 'MATRÍCULA', 'NOME', 'HORÁRIO', 'ESCALA', 'DETALHE', 'SEI Nº'],
+      substituidos.length
+        ? substituidos.map((r, i) => [
+            String(i + 1),
+            esc(r.policialMatricula),
+            esc(nomeCompleto(r.policialMatricula)),
+            turno(r.horarioInicio, r.horarioFim),
+            esc(guarnicaoNome(r.guarnicaoId)),
+            esc(r.detalhe),
+            '',
+          ])
+        : [['-', '-', '-', '-', '-', '-', '-']],
+    ),
+  );
+
+  out.push(`<p style="${S_TITULO}">FOLGAS</p>`);
+  out.push(
+    tabela(
+      ['QTD', 'MATRÍCULA', 'NOME', 'HORÁRIO', 'ESCALA', 'AUTORIZAÇÃO'],
+      folgas.length
+        ? folgas.map((r, i) => [
+            String(i + 1),
+            esc(r.policialMatricula),
+            esc(nomeCompleto(r.policialMatricula)),
+            turno(r.horarioInicio, r.horarioFim),
+            esc(guarnicaoNome(r.guarnicaoId)),
+            esc(r.detalhe),
+          ])
+        : [['-', '-', '-', '-', '-', '-']],
+    ),
+  );
+
+  out.push(`<p style="${S_TITULO}">REMANEJAMENTO DE EFETIVO</p>`);
+  out.push(
+    tabela(
+      ['QTD', 'MATRÍCULA', 'NOME', 'ESCALA', 'HORÁRIO', 'DESTINO'],
+      remanejados.length
+        ? remanejados.map((r, i) => [
+            String(i + 1),
+            esc(r.policialMatricula),
+            esc(nomeCompleto(r.policialMatricula)),
+            esc(guarnicaoNome(r.guarnicaoId)),
+            turno(r.horarioInicio, r.horarioFim),
+            esc(r.detalhe),
+          ])
+        : [['-', '-', '-', '-', '-', '-']],
+    ),
+  );
+
+  out.push(`<p style="${S_TITULO}">VIATURAS BAIXADAS / SETORES DESATIVADOS</p>`);
+  out.push(
+    tabela(
+      ['QTD', 'VIATURA', 'MOTIVO', 'SEI Nº'],
+      input.baixas.length
+        ? input.baixas.map((b, i) => [
+            String(i + 1),
+            esc(guarnicaoNome(b.guarnicaoId)),
+            esc(b.motivo),
+            esc(b.seiNumero),
+          ])
+        : [['-', '-', '-', '-']],
+    ),
+  );
+
+  // ALTERAÇÕES PJES/DIÁRIA, DIRESP, OBSERVAÇÕES (texto livre) ------
+  out.push(secaoTexto('ALTERAÇÕES DE SERVIÇO PJES E DIÁRIA', input.complementos.PJES_DIARIA));
+  out.push(secaoTexto(CAMPOS_TEXTO[3].titulo, input.complementos.DIRESP));
+  out.push(secaoTexto('OBSERVAÇÕES', input.complementos.OBSERVACOES));
+
+  // Assinatura ---------------------------------------------------
+  out.push(`<p style="${S_PARAGRAFO}text-align:left;">Respeitosamente,</p>`);
+  out.push(
+    `<p style="${S_PARAGRAFO}text-align:center;font-weight:bold;">GRADUADO DE OPERAÇÕES / 16º BPM<br>(06h00 às 06h00)</p>`,
+  );
+
+  return out.join('\n');
+}
+
+function tabela(cabecalhos: string[], linhas: string[][]): string {
+  const thead = `<tr>${cabecalhos.map((h) => `<th style="${S_TH}">${h}</th>`).join('')}</tr>`;
+  const tbody = linhas
+    .map((l) => `<tr>${l.map((c) => `<td style="${S_CEL}">${c}</td>`).join('')}</tr>`)
+    .join('');
+  return `<table style="${S_TABELA}"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+function secaoTexto(titulo: string, conteudo: string): string {
+  const texto = conteudo && conteudo.trim() ? esc(conteudo.trim()).replace(/\n/g, '<br>') : '-';
+  return `<p style="${S_TITULO}">${esc(titulo)}</p><p style="${S_PARAGRAFO}">${texto}</p>`;
 }
