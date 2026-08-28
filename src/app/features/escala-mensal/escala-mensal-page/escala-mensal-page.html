@@ -15,7 +15,7 @@
       name="guarnicao"
     >
       <option value="" disabled>Guarnição</option>
-      @for (guarnicao of guarnicoes(); track guarnicao.id) {
+      @for (guarnicao of guarnicoesVisiveis; track guarnicao.id) {
         <option [value]="guarnicao.id">{{ guarnicao.nome }}</option>
       }
     </select>
@@ -89,7 +89,7 @@
       name="filtroGuarnicao"
     >
       <option value="">Todas as guarnições</option>
-      @for (guarnicao of guarnicoes(); track guarnicao.id) {
+      @for (guarnicao of guarnicoesVisiveis; track guarnicao.id) {
         <option [value]="guarnicao.id">{{ guarnicao.nome }}</option>
       }
     </select>

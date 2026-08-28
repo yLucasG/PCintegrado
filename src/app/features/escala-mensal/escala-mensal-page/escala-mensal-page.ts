@@ -8,6 +8,8 @@ import {
 } from '../../../core/services/escala-mensal.service';
 import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
+import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
+import { AuthService, companhiaDoRole } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-escala-mensal-page',
@@ -19,10 +21,13 @@ export class EscalaMensalPage {
   private readonly escalaMensalService = inject(EscalaMensalService);
   private readonly guarnicoesService = inject(GuarnicoesService);
   private readonly policiaisService = inject(PoliciaisService);
+  private readonly companhiasService = inject(CompanhiasService);
+  private readonly authService = inject(AuthService);
 
   readonly escalas = signal<EscalaMensalRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
   readonly policiais = signal<PolicialRow[]>([]);
+  readonly companhias = signal<CompanhiaRow[]>([]);
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
@@ -49,23 +54,41 @@ export class EscalaMensalPage {
     void this.reload();
   }
 
+  /** Companhia à qual o perfil está restrito (null = ADMIN vê tudo). */
+  private get companhiaIdDoPerfil(): string | null {
+    const role = this.authService.currentPerfil?.role;
+    const nome = role ? companhiaDoRole(role) : null;
+    return nome ? (this.companhias().find((c) => c.nome === nome)?.id ?? null) : null;
+  }
+
+  /** Guarnições visíveis: todas (ADMIN) ou só as da companhia do perfil. */
+  get guarnicoesVisiveis(): GuarnicaoRow[] {
+    const cid = this.companhiaIdDoPerfil;
+    return cid ? this.guarnicoes().filter((g) => g.companhia_id === cid) : this.guarnicoes();
+  }
+
   get escalasFiltradas(): EscalaMensalRow[] {
+    const idsVisiveis = new Set(this.guarnicoesVisiveis.map((g) => g.id));
     const filtro = this.filtroGuarnicaoId();
-    return filtro ? this.escalas().filter((e) => e.guarnicao_id === filtro) : this.escalas();
+    return this.escalas().filter(
+      (e) => idsVisiveis.has(e.guarnicao_id) && (!filtro || e.guarnicao_id === filtro),
+    );
   }
 
   async reload(): Promise<void> {
     this.loading.set(true);
     this.errorMessage.set(null);
     try {
-      const [escalas, guarnicoes, policiais] = await Promise.all([
+      const [escalas, guarnicoes, policiais, companhias] = await Promise.all([
         this.escalaMensalService.listEscalaMensal(),
         this.guarnicoesService.listGuarnicoes(),
         this.policiaisService.listPoliciais(),
+        this.companhiasService.listCompanhias(),
       ]);
       this.escalas.set(escalas);
       this.guarnicoes.set(guarnicoes);
       this.policiais.set(policiais);
+      this.companhias.set(companhias);
     } catch {
       this.errorMessage.set('Não foi possível carregar a escala mensal.');
     } finally {
