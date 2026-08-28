@@ -57,6 +57,15 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'] },
       },
+      {
+        path: 'relatorio-sei',
+        loadComponent: () =>
+          import('./features/relatorio-sei/relatorio-sei-page/relatorio-sei-page').then(
+            (m) => m.RelatorioSeiPage,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['PC_LANCAMENTO', 'ADMIN'] },
+      },
     ],
   },
   {
