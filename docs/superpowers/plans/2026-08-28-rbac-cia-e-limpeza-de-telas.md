@@ -31,7 +31,7 @@
 **Interfaces:**
 - Produces: `export function companhiaDoRole(role: RoleUsuario): string | null` — consumido pelas Tasks 4 e 5.
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Adicionar ao fim de `src/app/core/services/auth.service.spec.ts` (antes já importa de `./auth.service`):
 
@@ -56,12 +56,12 @@ describe('companhiaDoRole', () => {
 
 (Ajustar o `import` do topo do arquivo para incluir `companhiaDoRole` junto de `AuthService`, em vez de adicionar uma segunda linha de import.)
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `npm test -- --watch=false --include='**/auth.service.spec.ts'`
 Expected: FAIL — `companhiaDoRole is not exported`.
 
-- [ ] **Step 3: Implementar**
+- [x] **Step 3: Implementar**
 
 Em `src/app/core/services/auth.service.ts`, logo após a definição de `RoleUsuario` (linha ~13):
 
@@ -85,12 +85,12 @@ export function companhiaDoRole(role: RoleUsuario): string | null {
 }
 ```
 
-- [ ] **Step 4: Rodar e ver passar**
+- [x] **Step 4: Rodar e ver passar**
 
 Run: `npm test -- --watch=false --include='**/auth.service.spec.ts'`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/core/services/auth.service.ts src/app/core/services/auth.service.spec.ts
@@ -112,14 +112,14 @@ git commit -m "feat: add companhiaDoRole helper"
 **Interfaces:**
 - Nada produzido. `GuarnicoesService` permanece (usado por Painel do PC, Policiais, Relatório SEI).
 
-- [ ] **Step 1: Apagar os arquivos**
+- [x] **Step 1: Apagar os arquivos**
 
 ```bash
 git rm -r src/app/features/viaturas src/app/features/guarnicoes
 git rm src/app/core/services/viaturas.service.ts src/app/core/services/viaturas.service.spec.ts
 ```
 
-- [ ] **Step 2: Remover as rotas**
+- [x] **Step 2: Remover as rotas**
 
 Em `src/app/app.routes.ts`, apagar os dois blocos de objeto de rota:
 ```typescript
@@ -143,7 +143,7 @@ e
 ```
 (As rotas `/viaturas` e `/guarnicoes` passam a cair no `{ path: '**', redirectTo: '' }`.)
 
-- [ ] **Step 3: Remover os links do menu superior**
+- [x] **Step 3: Remover os links do menu superior**
 
 Em `src/app/layout/top-bar/top-bar.html`, substituir:
 ```html
@@ -168,7 +168,7 @@ por:
     }
 ```
 
-- [ ] **Step 4: Remover os links do menu inferior**
+- [x] **Step 4: Remover os links do menu inferior**
 
 Em `src/app/layout/bottom-nav/bottom-nav.html`, substituir:
 ```html
@@ -193,7 +193,7 @@ por:
   }
 ```
 
-- [ ] **Step 5: Rodar suíte e build**
+- [x] **Step 5: Rodar suíte e build**
 
 Run: `npm test -- --watch=false`
 Expected: PASS (2 specs a menos: `viaturas-page`, `guarnicoes-page`, `viaturas.service`). Se algum arquivo ainda importar `ViaturasService` ou os componentes apagados, corrigir o import.
@@ -201,7 +201,7 @@ Expected: PASS (2 specs a menos: `viaturas-page`, `guarnicoes-page`, `viaturas.s
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -221,7 +221,7 @@ git commit -m "feat: remove Viaturas and Guarnicoes screens"
 - Consumes: `AuthService.currentPerfil` (já disponível via `inject`).
 - Produces: `PainelPcPage.podeEditar(): boolean`.
 
-- [ ] **Step 1: Escrever o teste**
+- [x] **Step 1: Escrever o teste**
 
 Substituir `src/app/features/painel-pc/painel-pc-page/painel-pc-page.spec.ts` por:
 
@@ -261,12 +261,12 @@ describe('PainelPcPage', () => {
 });
 ```
 
-- [ ] **Step 2: Rodar e ver falhar**
+- [x] **Step 2: Rodar e ver falhar**
 
 Run: `npm test -- --watch=false --include='**/painel-pc-page.spec.ts'`
 Expected: FAIL — `podeEditar is not a function` (e/ou o provider stub de `AuthService` derruba a criação atual).
 
-- [ ] **Step 3: Adicionar o getter e as guardas de método**
+- [x] **Step 3: Adicionar o getter e as guardas de método**
 
 Em `src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts`:
 
@@ -293,7 +293,7 @@ Verificar os nomes exatos com:
 Run: `grep -nE "^  (async )?(abrir|toggle|onDrop|onCriar|onRemover|onSalvar|onRegistrar|fechar)" src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts`
 Guardar todos os que **mudam estado** (os `fechar*` e `abrir*` de modais podem ser guardados também sem prejuízo; os `fechar*` podem ficar de fora).
 
-- [ ] **Step 4: Esconder os controles de edição no template**
+- [x] **Step 4: Esconder os controles de edição no template**
 
 Em `src/app/features/painel-pc/painel-pc-page/painel-pc-page.html`:
 
@@ -350,19 +350,19 @@ e trocar a classe `cursor-move` por `[ngClass]="podeEditar() ? 'cursor-move' : '
 
 4h. Seção "Funções fixas do dia": envolver o `<form class="mb-4 grid ...">` inteiro em `@if (podeEditar()) { ... }`; e o botão `✕` (`(click)="onRemoverFuncaoFixa(f.id)"`) em `@if (podeEditar()) { ... }`.
 
-- [ ] **Step 5: Rodar e ver passar**
+- [x] **Step 5: Rodar e ver passar**
 
 Run: `npm test -- --watch=false --include='**/painel-pc-page.spec.ts'`
 Expected: PASS.
 
-- [ ] **Step 6: Suíte e build**
+- [x] **Step 6: Suíte e build**
 
 Run: `npm test -- --watch=false`
 Expected: PASS.
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/app/features/painel-pc/painel-pc-page/
@@ -380,7 +380,7 @@ git commit -m "feat: Painel do PC read-only except for PC_LANCAMENTO"
 **Interfaces:**
 - Consumes: `companhiaDoRole` (Task 1), `AuthService.currentPerfil`, `CompanhiasService.listCompanhias`.
 
-- [ ] **Step 1: Ajustar o componente**
+- [x] **Step 1: Ajustar o componente**
 
 Em `src/app/features/escala-mensal/escala-mensal-page/escala-mensal-page.ts`:
 
@@ -431,7 +431,7 @@ No `reload()`, incluir `this.companhiasService.listCompanhias()` no `Promise.all
   }
 ```
 
-- [ ] **Step 2: Ajustar o template**
+- [x] **Step 2: Ajustar o template**
 
 Em `src/app/features/escala-mensal/escala-mensal-page/escala-mensal-page.html`, nos dois `@for` que iteram guarnições (o `<select name="guarnicao">` da Nova escala e o `<select name="filtroGuarnicao">` do filtro), trocar `guarnicoes()` por `guarnicoesVisiveis`:
 ```html
@@ -439,14 +439,14 @@ Em `src/app/features/escala-mensal/escala-mensal-page/escala-mensal-page.html`, 
 ```
 (dois lugares — linhas ~18 e ~92).
 
-- [ ] **Step 3: Suíte e build**
+- [x] **Step 3: Suíte e build**
 
 Run: `npm test -- --watch=false`
 Expected: PASS (o smoke test do componente continua; injeção nova de `AuthService`/`CompanhiasService` usa os providedIn-root reais, que já funcionam nos outros specs).
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/features/escala-mensal/escala-mensal-page/
@@ -464,7 +464,7 @@ git commit -m "feat: scope Escala Mensal to the profile's companhia"
 **Interfaces:**
 - Consumes: `companhiaDoRole` (Task 1), `EscalaMensalService.listEscalaMensal`, `GuarnicoesService.listGuarnicoes`, `CompanhiasService.listCompanhias`.
 
-- [ ] **Step 1: Reescrever o componente**
+- [x] **Step 1: Reescrever o componente**
 
 Substituir `src/app/features/policiais/policiais-page/policiais-page.ts` por:
 
@@ -592,7 +592,7 @@ export class PoliciaisPage {
 }
 ```
 
-- [ ] **Step 2: Reescrever o template**
+- [x] **Step 2: Reescrever o template**
 
 Substituir `src/app/features/policiais/policiais-page/policiais-page.html` por:
 
@@ -663,14 +663,14 @@ Substituir `src/app/features/policiais/policiais-page/policiais-page.html` por:
 </section>
 ```
 
-- [ ] **Step 3: Suíte e build**
+- [x] **Step 3: Suíte e build**
 
 Run: `npm test -- --watch=false`
 Expected: PASS (o smoke test `should create` do `policiais-page` continua válido).
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/features/policiais/policiais-page/
@@ -683,27 +683,27 @@ git commit -m "feat: Policiais as a read-only directory with search, companhia f
 
 **Files:** nenhum (a não ser ajustes pontuais).
 
-- [ ] **Step 1: Suíte completa e build**
+- [x] **Step 1: Suíte completa e build**
 
 Run: `npm test -- --watch=false`
 Expected: todos os specs passam.
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 2: Conferência manual (`npm start`)**
+- [ ] **Step 2: Conferência manual (`npm start`)** _(pendente — a cargo do usuário, no deploy da Vercel)_
 
 - Logar como **CIA_3**: menu sem Viaturas/Guarnições; Escala Mensal só com guarnições da 3ª CPM (Nova escala + filtro + tabela); Painel do PC com a faixa "Somente leitura", sem "+ Nova viatura", sem arrastar, cliques nos cards/linhas sem efeito, Funções fixas sem formulário; Policiais sem Adicionar/Remover, filtro iniciando em "3ª CPM", busca funcionando, colunas Guarnição e Escala preenchidas.
 - Logar como **PC_LANCAMENTO**: Painel do PC com todos os controles de edição, sem a faixa de aviso.
 - Logar como **ADMIN**: Escala Mensal com todas as companhias; Painel do PC só-leitura (com a faixa); Policiais sem Adicionar/Remover.
 - Navegar direto para `/viaturas` → redireciona para `/`.
 
-- [ ] **Step 3: Push**
+- [x] **Step 3: Push**
 
 ```bash
 git push origin main
 ```
 
-- [ ] **Step 4: Deploy**
+- [x] **Step 4: Deploy**
 
 O deploy do front-end é automático na Vercel a partir do push na `main` (`pc-integrado.vercel.app`). Sem migração de banco nesta fase. Confirmar que o build da Vercel passou.
 
