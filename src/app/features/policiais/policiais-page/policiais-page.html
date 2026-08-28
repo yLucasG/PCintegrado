@@ -24,6 +24,17 @@
     }
     <option value="__sem__">Sem companhia</option>
   </select>
+  <select
+    class="rounded border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+    [ngModel]="filtroEscala()"
+    (ngModelChange)="filtroEscala.set($event)"
+    name="filtroEscala"
+  >
+    <option value="">Todas as escalas</option>
+    @for (f of filtrosEscala; track f.chave) {
+      <option [value]="f.chave">{{ f.label }}</option>
+    }
+  </select>
 </section>
 
 <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
