@@ -31,7 +31,7 @@ interface Chamada {
   cards: CardRelatorio[];
 }
 
-const TIPOS_ORDINARIO: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV'];
+const TIPOS_ORDINARIO: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV', 'GG', 'CR'];
 
 const COMPLEMENTOS: { campo: CampoComplemento; titulo: string }[] = [
   { campo: 'PJES_DIARIA', titulo: 'PJES / Diária' },

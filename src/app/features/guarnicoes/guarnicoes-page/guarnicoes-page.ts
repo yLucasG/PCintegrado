@@ -19,7 +19,7 @@ export class GuarnicoesPage {
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
-  readonly tipos: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV'];
+  readonly tipos: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV', 'GG', 'CR'];
 
   readonly novoNome = signal('');
   readonly novoTipo = signal<TipoGuarnicao>('GT_TATICO');

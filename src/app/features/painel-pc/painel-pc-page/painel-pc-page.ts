@@ -79,7 +79,7 @@ export class PainelPcPage {
   readonly buscaPolicial = signal('');
 
   readonly novaViaturaAberta = signal(false);
-  readonly tiposGuarnicao: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV'];
+  readonly tiposGuarnicao: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV', 'GG', 'CR'];
   readonly novaViaturaNome = signal('');
   readonly novaViaturaTipo = signal<TipoGuarnicao>('GT_TATICO');
   readonly novaViaturaCompanhiaId = signal('');

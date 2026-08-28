@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
-export type TipoGuarnicao = 'GT_TATICO' | 'GT_ORDINARIO' | 'MO' | 'CP' | 'GV';
+export type TipoGuarnicao = 'GT_TATICO' | 'GT_ORDINARIO' | 'MO' | 'CP' | 'GV' | 'GG' | 'CR';
 
 export interface GuarnicaoRow {
   id: string;
