@@ -3,11 +3,25 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
 import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
-import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
-import { LancamentoService } from '../../../core/services/lancamento.service';
+import { GuarnicoesService } from '../../../core/services/guarnicoes.service';
+import {
+  EscalaMensalService,
+  EscalaMensalRow,
+  TipoRecorrencia,
+} from '../../../core/services/escala-mensal.service';
+import { AuthService, companhiaDoRole } from '../../../core/services/auth.service';
 
-function hojeIso(): string {
-  return new Date().toISOString().slice(0, 10);
+const RECORRENCIA_LABEL: Record<TipoRecorrencia, string> = {
+  PARES: 'Pares',
+  IMPARES: 'Ímpares',
+  DIAS_ESPECIFICOS: 'Dias específicos',
+  SEG_A_SEX: 'Seg–Sex',
+  TODOS_OS_DIAS: 'Todos os dias',
+};
+
+interface EscalaResumo {
+  guarnicao: string;
+  escala: string;
 }
 
 @Component({
@@ -20,19 +34,17 @@ export class PoliciaisPage {
   private readonly policiaisService = inject(PoliciaisService);
   private readonly companhiasService = inject(CompanhiasService);
   private readonly guarnicoesService = inject(GuarnicoesService);
-  private readonly lancamentoService = inject(LancamentoService);
+  private readonly escalaMensalService = inject(EscalaMensalService);
+  private readonly authService = inject(AuthService);
 
   readonly policiais = signal<PolicialRow[]>([]);
   readonly companhias = signal<CompanhiaRow[]>([]);
-  readonly funcaoHojePorMatricula = signal<Map<string, string>>(new Map());
+  readonly escalaPorMatricula = signal<Map<string, EscalaResumo[]>>(new Map());
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
-  readonly novaMatricula = signal('');
-  readonly novaGraduacao = signal('');
-  readonly novoNomeGuerra = signal('');
-  readonly novoTelefone = signal('');
-  readonly novaCompanhiaId = signal('');
+  readonly busca = signal('');
+  readonly filtroCompanhiaId = signal('');
 
   constructor() {
     void this.reload();
@@ -42,24 +54,34 @@ export class PoliciaisPage {
     this.loading.set(true);
     this.errorMessage.set(null);
     try {
-      const [policiais, companhias, guarnicoes, roster] = await Promise.all([
+      const [policiais, companhias, guarnicoes, escala] = await Promise.all([
         this.policiaisService.listPoliciais(),
         this.companhiasService.listCompanhias(),
         this.guarnicoesService.listGuarnicoes(),
-        this.lancamentoService.listRosterDoDia(hojeIso()),
+        this.escalaMensalService.listEscalaMensal(),
       ]);
       this.policiais.set(policiais);
       this.companhias.set(companhias);
 
-      const tipoPorGuarnicao = new Map<string, GuarnicaoRow['tipo']>(guarnicoes.map((g) => [g.id, g.tipo]));
-      const funcaoHoje = new Map<string, string>();
-      for (const linha of roster) {
-        const tipo = tipoPorGuarnicao.get(linha.guarnicaoId);
-        if (tipo) {
-          funcaoHoje.set(linha.policialMatricula, tipo);
-        }
+      const nomePorGuarnicao = new Map(guarnicoes.map((g) => [g.id, g.nome]));
+      const mapa = new Map<string, EscalaResumo[]>();
+      for (const linha of escala as EscalaMensalRow[]) {
+        const lista = mapa.get(linha.policial_matricula) ?? [];
+        lista.push({
+          guarnicao: nomePorGuarnicao.get(linha.guarnicao_id) ?? '—',
+          escala: `${RECORRENCIA_LABEL[linha.tipo_recorrencia]} · ${linha.horario_inicio.slice(0, 5)}–${linha.horario_fim.slice(0, 5)}`,
+        });
+        mapa.set(linha.policial_matricula, lista);
       }
-      this.funcaoHojePorMatricula.set(funcaoHoje);
+      this.escalaPorMatricula.set(mapa);
+
+      // Filtro inicia na companhia do próprio perfil, quando houver.
+      const role = this.authService.currentPerfil?.role;
+      const nomeCia = role ? companhiaDoRole(role) : null;
+      if (nomeCia) {
+        const cid = companhias.find((c) => c.nome === nomeCia)?.id;
+        if (cid) this.filtroCompanhiaId.set(cid);
+      }
     } catch {
       this.errorMessage.set('Não foi possível carregar os policiais.');
     } finally {
@@ -71,37 +93,29 @@ export class PoliciaisPage {
     return this.companhias().find((c) => c.id === id)?.nome ?? '—';
   }
 
-  funcaoHoje(matricula: string): string {
-    return this.funcaoHojePorMatricula().get(matricula) ?? 'P.O.';
+  guarnicaoDe(matricula: string): string {
+    const lista = this.escalaPorMatricula().get(matricula) ?? [];
+    return lista.length ? lista.map((e) => e.guarnicao).join(' / ') : '—';
   }
 
-  async onCreate(): Promise<void> {
-    this.errorMessage.set(null);
-    try {
-      await this.policiaisService.createPolicial({
-        matricula: this.novaMatricula(),
-        graduacao: this.novaGraduacao(),
-        nome_guerra: this.novoNomeGuerra(),
-        telefone: this.novoTelefone() || null,
-        companhia_id: this.novaCompanhiaId() || null,
-      });
-      this.novaMatricula.set('');
-      this.novaGraduacao.set('');
-      this.novoNomeGuerra.set('');
-      this.novoTelefone.set('');
-      this.novaCompanhiaId.set('');
-      await this.reload();
-    } catch {
-      this.errorMessage.set('Não foi possível criar o policial.');
-    }
+  escalaDe(matricula: string): string {
+    const lista = this.escalaPorMatricula().get(matricula) ?? [];
+    return lista.length ? lista.map((e) => e.escala).join(' / ') : '—';
   }
 
-  async onRemove(matricula: string): Promise<void> {
-    try {
-      await this.policiaisService.removePolicial(matricula);
-      await this.reload();
-    } catch {
-      this.errorMessage.set('Não foi possível remover o policial.');
-    }
+  get policiaisFiltrados(): PolicialRow[] {
+    const busca = this.busca().trim().toLowerCase();
+    const cia = this.filtroCompanhiaId();
+    return this.policiais().filter((p) => {
+      if (cia === '__sem__') {
+        if (p.companhia_id) return false;
+      } else if (cia && p.companhia_id !== cia) {
+        return false;
+      }
+      if (!busca) return true;
+      return (
+        p.nome_guerra.toLowerCase().includes(busca) || p.matricula.toLowerCase().includes(busca)
+      );
+    });
   }
 }
