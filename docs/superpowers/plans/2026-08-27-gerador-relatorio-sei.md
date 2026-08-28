@@ -30,7 +30,7 @@
 **Interfaces:**
 - Produces: `lancamento_atrasos.sei_numero`, `lancamento_baixas.sei_numero`, `lancamento_os.situacao`, `lancamento_os.local`, `public.lancamento_licencas`, `public.lancamento_funcoes_fixas`, `public.relatorio_sei_complementos` — consumed by `LancamentoService` and `RelatorioSeiService` (Tasks 2 and 7).
 
-- [ ] **Step 1: Write the migration**
+- [x] **Step 1: Write the migration**
 
 Create `supabase/migrations/20260827090000_relatorio_sei.sql`:
 ```sql
@@ -111,7 +111,7 @@ create policy "authenticated_update_relatorio_sei_complementos" on public.relato
   for update to authenticated using (true) with check (true);
 ```
 
-- [ ] **Step 2: Structural sanity check**
+- [x] **Step 2: Structural sanity check**
 
 Run: `grep -c "^create table" supabase/migrations/20260827090000_relatorio_sei.sql`
 Expected: `3`
@@ -119,7 +119,7 @@ Expected: `3`
 Run: `grep -c "^alter table public.lancamento_.* add column" supabase/migrations/20260827090000_relatorio_sei.sql`
 Expected: `4`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/migrations/20260827090000_relatorio_sei.sql
@@ -142,7 +142,7 @@ git commit -m "feat: add licencas, funcoes fixas and relatorio complementos tabl
   - `LancamentoService.registrarLicenca(input)`, `.removerLicenca(id)`, `.listFuncoesFixasDoDia(data)`, `.registrarFuncaoFixa(input)`, `.removerFuncaoFixa(id)`.
   - `RegistrarAtrasoInput.sei_numero`, `RegistrarBaixaInput.sei_numero`, `BaixaRow.seiNumero`, `RegistrarOsInput.situacao`/`.local`, `OsRow.situacao`/`.local`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace `src/app/core/services/lancamento.service.spec.ts` with the current content (unchanged tests kept intact) plus these additions — apply as a full-file replace:
 
@@ -711,12 +711,12 @@ describe('LancamentoService', () => {
 });
 ```
 
-- [ ] **Step 2: Confirm the new/changed tests fail**
+- [x] **Step 2: Confirm the new/changed tests fail**
 
 Run: `npm test -- --watch=false --include='**/lancamento.service.spec.ts'`
 Expected: FAIL — `service.registrarLicenca is not a function` (and similar for the other new members/fields).
 
-- [ ] **Step 3: Implement the service**
+- [x] **Step 3: Implement the service**
 
 Replace `src/app/core/services/lancamento.service.ts` in full:
 ```typescript
@@ -1185,12 +1185,12 @@ export class LancamentoService {
 }
 ```
 
-- [ ] **Step 4: Confirm the tests pass**
+- [x] **Step 4: Confirm the tests pass**
 
 Run: `npm test -- --watch=false --include='**/lancamento.service.spec.ts'`
 Expected: PASS (all specs, including the new ones).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/core/services/lancamento.service.ts src/app/core/services/lancamento.service.spec.ts
@@ -1210,7 +1210,7 @@ git commit -m "feat: add licencas (LTS/DTS) and funcoes fixas to LancamentoServi
 
 **Note:** `toggleBaixa` today is a single click that always calls `registrarBaixa({ data, guarnicao_id, horario_inicio })` with no motivo/SEI capture — there is no existing "baixa modal" to extend, unlike permuta/folga. This task replaces the "turn off" half of that click with a small modal (mirroring the existing OS modal) so motivo and Nº SEI can be captured; turning a viatura back on stays a direct one-click action, unchanged.
 
-- [ ] **Step 1: Add baixa-modal state and methods**
+- [x] **Step 1: Add baixa-modal state and methods**
 
 In `src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts`, find:
 ```typescript
@@ -1232,7 +1232,7 @@ Replace with:
   readonly salvandoBaixa = signal(false);
 ```
 
-- [ ] **Step 2: Replace `toggleBaixa` with modal open/close/save methods**
+- [x] **Step 2: Replace `toggleBaixa` with modal open/close/save methods**
 
 Find:
 ```typescript
@@ -1301,7 +1301,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 3: Add situação/local state to the OS modal**
+- [x] **Step 3: Add situação/local state to the OS modal**
 
 Find:
 ```typescript
@@ -1348,7 +1348,7 @@ Replace with:
       }
 ```
 
-- [ ] **Step 4: Add SEI field to the atraso branch of `onRegistrarModal`**
+- [x] **Step 4: Add SEI field to the atraso branch of `onRegistrarModal`**
 
 Find:
 ```typescript
@@ -1376,7 +1376,7 @@ Replace with:
           break;
 ```
 
-- [ ] **Step 5: Add the SEI input to the ATRASADO block in the template**
+- [x] **Step 5: Add the SEI input to the ATRASADO block in the template**
 
 In `src/app/features/painel-pc/painel-pc-page/painel-pc-page.html`, find:
 ```html
@@ -1426,7 +1426,7 @@ Replace with:
           }
 ```
 
-- [ ] **Step 6: Add situação/local inputs to the OS modal template**
+- [x] **Step 6: Add situação/local inputs to the OS modal template**
 
 Find:
 ```html
@@ -1467,7 +1467,7 @@ Replace with:
           <p class="text-xs text-slate-400 dark:text-slate-500">Deixe em branco e salve para remover a OS.</p>
 ```
 
-- [ ] **Step 7: Add the baixa modal markup**
+- [x] **Step 7: Add the baixa modal markup**
 
 In `src/app/features/painel-pc/painel-pc-page/painel-pc-page.html`, find the closing of the OS modal block:
 ```html
@@ -1523,12 +1523,12 @@ and its matching closing `}` a few lines below (right before the final `</div>` 
   }
 ```
 
-- [ ] **Step 8: Confirm the component smoke test still passes**
+- [x] **Step 8: Confirm the component smoke test still passes**
 
 Run: `npm test -- --watch=false --include='**/painel-pc-page.spec.ts'`
 Expected: PASS.
 
-- [ ] **Step 9: Run the full test suite and build**
+- [x] **Step 9: Run the full test suite and build**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass.
@@ -1536,7 +1536,7 @@ Expected: all specs pass.
 Run: `npm run build`
 Expected: succeeds.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts src/app/features/painel-pc/painel-pc-page/painel-pc-page.html
@@ -1554,7 +1554,7 @@ git commit -m "feat: capture SEI on atraso/baixa and situacao/local on OS in Pai
 **Interfaces:**
 - Consumes: `LancamentoService.registrarLicenca`/`.removerLicenca` (Task 2).
 
-- [ ] **Step 1: Add LICENCA to the badge/label maps and the tipo list**
+- [x] **Step 1: Add LICENCA to the badge/label maps and the tipo list**
 
 Find:
 ```typescript
@@ -1617,7 +1617,7 @@ Replace with:
   readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO', 'LICENCA'];
 ```
 
-- [ ] **Step 2: Add form state and reset it in `abrirModal`**
+- [x] **Step 2: Add form state and reset it in `abrirModal`**
 
 Find:
 ```typescript
@@ -1655,7 +1655,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 3: Handle the LICENCA branch in `onRegistrarModal`**
+- [x] **Step 3: Handle the LICENCA branch in `onRegistrarModal`**
 
 Find:
 ```typescript
@@ -1691,7 +1691,7 @@ Replace with:
       }
 ```
 
-- [ ] **Step 4: Add a `toggleLicenca` method to undo a LICENCA row**
+- [x] **Step 4: Add a `toggleLicenca` method to undo a LICENCA row**
 
 Find:
 ```typescript
@@ -1734,7 +1734,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 5: Add the LICENCA fields to the modal template**
+- [x] **Step 5: Add the LICENCA fields to the modal template**
 
 In `src/app/features/painel-pc/painel-pc-page/painel-pc-page.html`, find:
 ```html
@@ -1795,7 +1795,7 @@ Replace with:
           }
 ```
 
-- [ ] **Step 6: Add an "undo" action on the card row for LICENCA**
+- [x] **Step 6: Add an "undo" action on the card row for LICENCA**
 
 Find:
 ```html
@@ -1840,7 +1840,7 @@ Replace with:
                     }
 ```
 
-- [ ] **Step 7: Run the full test suite and build**
+- [x] **Step 7: Run the full test suite and build**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass.
@@ -1848,7 +1848,7 @@ Expected: all specs pass.
 Run: `npm run build`
 Expected: succeeds.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts src/app/features/painel-pc/painel-pc-page/painel-pc-page.html
@@ -1866,7 +1866,7 @@ git commit -m "feat: register and undo LTS/DTS (LICENCA) in Painel do PC"
 **Interfaces:**
 - Consumes: `LancamentoService.listFuncoesFixasDoDia`/`.registrarFuncaoFixa`/`.removerFuncaoFixa`, `GrupoFuncaoFixa`, `FuncaoFixaRow` (Task 2).
 
-- [ ] **Step 1: Add state, loaders and CRUD methods**
+- [x] **Step 1: Add state, loaders and CRUD methods**
 
 Find:
 ```typescript
@@ -1994,7 +1994,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 2: Add the "Funções fixas do dia" section to the template**
+- [x] **Step 2: Add the "Funções fixas do dia" section to the template**
 
 In `src/app/features/painel-pc/painel-pc-page/painel-pc-page.html`, find the closing `</section>` of the cards grid (the block starting with `<section class="mt-6">` that renders `@for (card of cards; ...)`), and insert this new section right after it, before the `@if (modalRow(); as linha) {` block:
 ```html
@@ -2086,7 +2086,7 @@ In `src/app/features/painel-pc/painel-pc-page/painel-pc-page.html`, find the clo
   </section>
 ```
 
-- [ ] **Step 3: Run the full test suite and build**
+- [x] **Step 3: Run the full test suite and build**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass.
@@ -2094,7 +2094,7 @@ Expected: all specs pass.
 Run: `npm run build`
 Expected: succeeds.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts src/app/features/painel-pc/painel-pc-page/painel-pc-page.html
@@ -2111,7 +2111,7 @@ git commit -m "feat: add funcoes fixas do dia section to Painel do PC"
 **Interfaces:**
 - Consumes: `StatusEfetivo` (now including `'LICENCA'`) from Task 2.
 
-- [ ] **Step 1: Add LICENCA to the Dashboard's status maps**
+- [x] **Step 1: Add LICENCA to the Dashboard's status maps**
 
 Find:
 ```typescript
@@ -2168,7 +2168,7 @@ const STATUS_CARD_CLASSES: Record<StatusEfetivo, string> = {
 };
 ```
 
-- [ ] **Step 2: Run the full test suite and build**
+- [x] **Step 2: Run the full test suite and build**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass (the Dashboard now renders 7 status tiles instead of 6 — no test asserts a fixed count, so nothing to update there).
@@ -2176,7 +2176,7 @@ Expected: all specs pass (the Dashboard now renders 7 status tiles instead of 6 
 Run: `npm run build`
 Expected: succeeds.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/app/features/dashboard/dashboard-page/dashboard-page.ts
@@ -2195,7 +2195,7 @@ git commit -m "feat: add LICENCA status to the Dashboard summary"
 - Consumes: `SupabaseService.client`, `relatorio_sei_complementos` (Task 1).
 - Produces: `CampoComplemento`, `ComplementoRow`, `RelatorioSeiService.listComplementos(data)`, `.salvarComplemento(data, campo, conteudo)` — consumed by `RelatorioSeiPage` (Task 8).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/app/core/services/relatorio-sei.service.spec.ts`:
 ```typescript
@@ -2243,12 +2243,12 @@ describe('RelatorioSeiService', () => {
 });
 ```
 
-- [ ] **Step 2: Confirm the tests fail**
+- [x] **Step 2: Confirm the tests fail**
 
 Run: `npm test -- --watch=false --include='**/relatorio-sei.service.spec.ts'`
 Expected: FAIL — `Cannot find module './relatorio-sei.service'`.
 
-- [ ] **Step 3: Implement the service**
+- [x] **Step 3: Implement the service**
 
 Create `src/app/core/services/relatorio-sei.service.ts`:
 ```typescript
@@ -2284,12 +2284,12 @@ export class RelatorioSeiService {
 }
 ```
 
-- [ ] **Step 4: Confirm the tests pass**
+- [x] **Step 4: Confirm the tests pass**
 
 Run: `npm test -- --watch=false --include='**/relatorio-sei.service.spec.ts'`
 Expected: PASS (2 specs).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/app/core/services/relatorio-sei.service.ts src/app/core/services/relatorio-sei.service.spec.ts
@@ -2310,16 +2310,16 @@ git commit -m "feat: add RelatorioSeiService for free-text complementos"
 - Consumes: `LancamentoService` (roster, baixas, OS, funções fixas — Tasks 2–5), `GuarnicoesService`, `PoliciaisService`, `RelatorioSeiService` (Task 7).
 - Produces: `RelatorioSeiPage` — routed at `/relatorio-sei` in Task 9.
 
-- [ ] **Step 1: Generate the component**
+- [x] **Step 1: Generate the component**
 
 Run: `npx ng generate component features/relatorio-sei/relatorio-sei-page --flat=false`
 
-- [ ] **Step 2: Confirm the generated spec passes as-is**
+- [x] **Step 2: Confirm the generated spec passes as-is**
 
 Run: `npm test -- --watch=false --include='**/relatorio-sei-page.spec.ts'`
 Expected: PASS.
 
-- [ ] **Step 3: Implement the component**
+- [x] **Step 3: Implement the component**
 
 Replace `src/app/features/relatorio-sei/relatorio-sei-page/relatorio-sei-page.ts`:
 ```typescript
@@ -2649,7 +2649,7 @@ export class RelatorioSeiPage {
 }
 ```
 
-- [ ] **Step 4: Implement the template**
+- [x] **Step 4: Implement the template**
 
 Replace `src/app/features/relatorio-sei/relatorio-sei-page/relatorio-sei-page.html`:
 ```html
@@ -2822,12 +2822,12 @@ Replace `src/app/features/relatorio-sei/relatorio-sei-page/relatorio-sei-page.ht
 </div>
 ```
 
-- [ ] **Step 5: Confirm the component smoke test still passes**
+- [x] **Step 5: Confirm the component smoke test still passes**
 
 Run: `npm test -- --watch=false --include='**/relatorio-sei-page.spec.ts'`
 Expected: PASS.
 
-- [ ] **Step 6: Run the full test suite and build**
+- [x] **Step 6: Run the full test suite and build**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass.
@@ -2835,7 +2835,7 @@ Expected: all specs pass.
 Run: `npm run build`
 Expected: succeeds.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/app/features/relatorio-sei
@@ -2856,7 +2856,7 @@ git commit -m "feat: add relatorio SEI page"
 **Interfaces:**
 - Consumes: `RelatorioSeiPage` (Task 8), `roleGuard` (existing), `AuthService.currentPerfil` (existing).
 
-- [ ] **Step 1: Add the route**
+- [x] **Step 1: Add the route**
 
 In `src/app/app.routes.ts`, find:
 ```typescript
@@ -2896,7 +2896,7 @@ Replace with:
   },
 ```
 
-- [ ] **Step 2: Add `podeGerarRelatorioSei()` to `TopBar`**
+- [x] **Step 2: Add `podeGerarRelatorioSei()` to `TopBar`**
 
 Replace `src/app/layout/top-bar/top-bar.ts` in full:
 ```typescript
@@ -2934,7 +2934,7 @@ export class TopBar {
 }
 ```
 
-- [ ] **Step 3: Add the link to the top bar template**
+- [x] **Step 3: Add the link to the top bar template**
 
 In `src/app/layout/top-bar/top-bar.html`, find:
 ```html
@@ -2958,7 +2958,7 @@ Replace with:
     }
 ```
 
-- [ ] **Step 4: Add `podeGerarRelatorioSei()` to `BottomNav`**
+- [x] **Step 4: Add `podeGerarRelatorioSei()` to `BottomNav`**
 
 Replace `src/app/layout/bottom-nav/bottom-nav.ts` in full:
 ```typescript
@@ -2992,7 +2992,7 @@ export class BottomNav {
 }
 ```
 
-- [ ] **Step 5: Add the link to the bottom nav template**
+- [x] **Step 5: Add the link to the bottom nav template**
 
 In `src/app/layout/bottom-nav/bottom-nav.html`, find:
 ```html
@@ -3016,7 +3016,7 @@ Replace with:
   }
 ```
 
-- [ ] **Step 6: Run the full test suite and build**
+- [x] **Step 6: Run the full test suite and build**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass.
@@ -3024,7 +3024,7 @@ Expected: all specs pass.
 Run: `npm run build`
 Expected: succeeds, `relatorio-sei-page` shows up as a lazy chunk.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/app/app.routes.ts src/app/layout/top-bar src/app/layout/bottom-nav
@@ -3037,23 +3037,23 @@ git commit -m "feat: wire up routing, navigation and RBAC for relatorio SEI"
 
 **Files:** none.
 
-- [ ] **Step 1: Run the full local test suite one more time**
+- [x] **Step 1: Run the full local test suite one more time**
 
 Run: `npm test -- --watch=false`
 Expected: all specs pass.
 
-- [ ] **Step 2: Run a full production build**
+- [x] **Step 2: Run a full production build**
 
 Run: `npm run build`
 Expected: succeeds.
 
-- [ ] **Step 3: Push to GitHub**
+- [x] **Step 3: Push to GitHub**
 
 ```bash
 git push
 ```
 
-- [ ] **Step 4: Deploy the migration (reuse the existing access token if still valid; otherwise ask the user for a new one)**
+- [x] **Step 4: Deploy the migration (reuse the existing access token if still valid; otherwise ask the user for a new one)**
 
 ```bash
 export SUPABASE_ACCESS_TOKEN="<token>"
@@ -3061,7 +3061,7 @@ export SUPABASE_ACCESS_TOKEN="<token>"
 ```
 Expected: `20260827090000_relatorio_sei.sql` shows up as applied.
 
-- [ ] **Step 5: Verify end-to-end against real 3ª CPM data**
+- [~] **Step 5: Verify end-to-end against real 3ª CPM data** — _schema verified live on production (migration `20260827090000` applied; PostgREST resolves all three new tables and the `sei_numero`/`situacao`/`local` columns). The authenticated write round-trip below is being verified by the user directly in the running app (Painel do PC + `/relatorio-sei`) rather than via REST._
 
 Using the REST API (same pattern as previous phases): log in as the seeded ADMIN, then:
 1. POST a `lancamento_licencas` row for a real `policial_matricula` with `data_inicio`/`data_fim` spanning a known PARES day (e.g. `2026-08-04`) but starting a day earlier (e.g. `2026-08-03` to `2026-08-05`) — confirm via `rpc/fn_resolve_escala_dia` + the roster-merge logic that the policial resolves to `LICENCA` on `2026-08-04` (inside the range) and would NOT on `2026-08-02` (outside it).
@@ -3070,7 +3070,7 @@ Using the REST API (same pattern as previous phases): log in as the seeded ADMIN
 4. POST a `relatorio_sei_complementos` row via upsert, then upsert again with different `conteudo` for the same `data`+`campo` and confirm it updated in place rather than duplicating.
 5. Clean up every test row (`DELETE`) so the seeded data stays clean for the user.
 
-- [ ] **Step 6: Report completion to the user**, noting that PJES/Diária, Fiscalização, POG and DIRESP remain free text, and that importing 1ª CPM/2ª CPM/PCTAT data is the next item on the roadmap.
+- [x] **Step 6: Report completion to the user**, noting that PJES/Diária, Fiscalização, POG and DIRESP remain free text, and that importing 1ª CPM/2ª CPM/PCTAT data is the next item on the roadmap.
 
 ## Self-Review Notes
 
