@@ -69,14 +69,22 @@
       name="buscaPolicial"
     />
 
-    <button
-      type="button"
-      class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white dark:bg-blue-500"
-      (click)="abrirNovaViatura()"
-    >
-      + Nova viatura
-    </button>
+    @if (podeEditar()) {
+      <button
+        type="button"
+        class="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white dark:bg-blue-500"
+        (click)="abrirNovaViatura()"
+      >
+        + Nova viatura
+      </button>
+    }
   </section>
+
+  @if (!podeEditar()) {
+    <p class="mt-4 rounded bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+      Somente leitura — apenas o PC de Lançamento edita este painel.
+    </p>
+  }
 
   <section class="mt-6">
     @if (loading()) {
@@ -111,19 +119,27 @@
                 @if (card.areaAtuacao) {
                   <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.areaAtuacao }}</p>
                 }
-                <button
-                  type="button"
-                  class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
-                  [ngClass]="
-                    osDoCard(card)
-                      ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300'
-                      : 'border border-dashed border-slate-300 text-slate-400 dark:border-slate-600 dark:text-slate-500'
-                  "
-                  title="Ordem de Serviço"
-                  (click)="abrirOs(card)"
-                >
-                  {{ osDoCard(card)?.numeroOs || 'OS' }}
-                </button>
+                @if (podeEditar()) {
+                  <button
+                    type="button"
+                    class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                    [ngClass]="
+                      osDoCard(card)
+                        ? 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300'
+                        : 'border border-dashed border-slate-300 text-slate-400 dark:border-slate-600 dark:text-slate-500'
+                    "
+                    title="Ordem de Serviço"
+                    (click)="abrirOs(card)"
+                  >
+                    {{ osDoCard(card)?.numeroOs || 'OS' }}
+                  </button>
+                } @else if (osDoCard(card)) {
+                  <span
+                    class="shrink-0 rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300"
+                  >
+                    {{ osDoCard(card)?.numeroOs }}
+                  </span>
+                }
               </div>
 
               <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ resumoCard(card) }}</p>
@@ -134,7 +150,7 @@
               [id]="card.cardId"
               [cdkDropListData]="card.rows"
               [cdkDropListConnectedTo]="dropListIds"
-              [cdkDropListDisabled]="isBaixada(card)"
+              [cdkDropListDisabled]="isBaixada(card) || !podeEditar()"
               (cdkDropListDropped)="onDrop($event)"
               class="flex-1 px-4 pb-4"
             >
@@ -143,7 +159,9 @@
                   <div
                     cdkDrag
                     [cdkDragData]="linha"
-                    class="cursor-move rounded border border-slate-200/70 bg-white/50 px-2 py-2 text-sm dark:border-slate-700/60 dark:bg-slate-800/40"
+                    [cdkDragDisabled]="!podeEditar()"
+                    class="rounded border border-slate-200/70 bg-white/50 px-2 py-2 text-sm dark:border-slate-700/60 dark:bg-slate-800/40"
+                    [ngClass]="podeEditar() ? 'cursor-move' : ''"
                   >
                     <div class="flex items-center justify-between gap-2">
                       <button type="button" class="flex items-center gap-2 text-left" (click)="abrirModal(linha)">
@@ -177,9 +195,10 @@
                     </div>
 
                     @if (
-                      linha.statusEfetivo === 'PREVISTO' ||
-                      linha.statusEfetivo === 'FALTA' ||
-                      linha.statusEfetivo === 'ATRASADO'
+                      podeEditar() &&
+                      (linha.statusEfetivo === 'PREVISTO' ||
+                        linha.statusEfetivo === 'FALTA' ||
+                        linha.statusEfetivo === 'ATRASADO')
                     ) {
                       <div class="mt-1 flex gap-1">
                         <button
@@ -210,7 +229,7 @@
                         </button>
                       </div>
                     }
-                    @if (linha.statusEfetivo === 'REMANEJADO') {
+                    @if (podeEditar() && linha.statusEfetivo === 'REMANEJADO') {
                       <div class="mt-1">
                         <button
                           type="button"
@@ -222,7 +241,7 @@
                         </button>
                       </div>
                     }
-                    @if (linha.statusEfetivo === 'LICENCA') {
+                    @if (podeEditar() && linha.statusEfetivo === 'LICENCA') {
                       <div class="mt-1">
                         <button
                           type="button"
@@ -253,6 +272,7 @@
   <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
     <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Funções fixas do dia</h2>
 
+    @if (podeEditar()) {
     <form class="mb-4 grid gap-2 sm:grid-cols-6" (ngSubmit)="onCriarFuncaoFixa()">
       <select
         class="rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -306,6 +326,7 @@
         + Adicionar
       </button>
     </form>
+    }
 
     <div class="grid gap-4 sm:grid-cols-3">
       @for (grupo of gruposFuncaoFixa; track grupo) {
@@ -320,14 +341,16 @@
                   <span class="text-slate-700 dark:text-slate-200">
                     {{ f.funcao }} — {{ policialNome(f.policialMatricula) }} ({{ f.horarioInicio.slice(0, 5) }}–{{ f.horarioFim.slice(0, 5) }})
                   </span>
-                  <button
-                    type="button"
-                    class="text-slate-400 hover:text-red-600 dark:hover:text-red-400"
-                    title="Remover"
-                    (click)="onRemoverFuncaoFixa(f.id)"
-                  >
-                    ✕
-                  </button>
+                  @if (podeEditar()) {
+                    <button
+                      type="button"
+                      class="text-slate-400 hover:text-red-600 dark:hover:text-red-400"
+                      title="Remover"
+                      (click)="onRemoverFuncaoFixa(f.id)"
+                    >
+                      ✕
+                    </button>
+                  }
                 </li>
               }
             </ul>

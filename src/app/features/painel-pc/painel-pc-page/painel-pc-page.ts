@@ -16,6 +16,7 @@ import { GuarnicoesService, GuarnicaoRow, TipoGuarnicao } from '../../../core/se
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
 import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
 import { EscalaMensalService } from '../../../core/services/escala-mensal.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO' | 'LICENCA';
 
@@ -65,6 +66,12 @@ export class PainelPcPage {
   private readonly policiaisService = inject(PoliciaisService);
   private readonly companhiasService = inject(CompanhiasService);
   private readonly escalaMensalService = inject(EscalaMensalService);
+  private readonly authService = inject(AuthService);
+
+  /** Só o PC de Lançamento edita este painel; todos os outros perfis só veem. */
+  podeEditar(): boolean {
+    return this.authService.currentPerfil?.role === 'PC_LANCAMENTO';
+  }
 
   readonly data = signal(hojeIso());
   readonly roster = signal<RosterRow[]>([]);
@@ -268,6 +275,7 @@ export class PainelPcPage {
   }
 
   async toggleBaixa(card: CardGuarnicao): Promise<void> {
+    if (!this.podeEditar()) return;
     const baixa = this.baixaDoCard(card);
     if (baixa) {
       try {
@@ -288,6 +296,7 @@ export class PainelPcPage {
   }
 
   async onSalvarBaixa(): Promise<void> {
+    if (!this.podeEditar()) return;
     const card = this.baixaModalCard();
     if (!card) {
       return;
@@ -394,6 +403,7 @@ export class PainelPcPage {
   }
 
   async onCriarFuncaoFixa(): Promise<void> {
+    if (!this.podeEditar()) return;
     this.criandoFuncaoFixa.set(true);
     this.errorMessage.set(null);
     try {
@@ -418,6 +428,7 @@ export class PainelPcPage {
   }
 
   async onRemoverFuncaoFixa(id: string): Promise<void> {
+    if (!this.podeEditar()) return;
     try {
       await this.lancamentoService.removerFuncaoFixa(id);
       await this.reloadFuncoesFixas();
@@ -431,6 +442,7 @@ export class PainelPcPage {
   }
 
   abrirOs(card: CardGuarnicao): void {
+    if (!this.podeEditar()) return;
     this.osModalCard.set(card);
     const existente = this.osDoCard(card);
     this.osTexto.set(existente?.numeroOs ?? '');
@@ -443,6 +455,7 @@ export class PainelPcPage {
   }
 
   async onSalvarOs(): Promise<void> {
+    if (!this.podeEditar()) return;
     const card = this.osModalCard();
     if (!card) {
       return;
@@ -495,6 +508,7 @@ export class PainelPcPage {
   }
 
   abrirModal(row: RosterRow): void {
+    if (!this.podeEditar()) return;
     this.modalRow.set(row);
     this.tipoLancamento.set(row.statusEfetivo === 'ATRASADO' ? 'ATRASADO' : 'FALTA');
     this.formMotivo.set(row.statusEfetivo === 'FALTA' || row.statusEfetivo === 'ATRASADO' ? (row.detalhe ?? '') : '');
@@ -512,6 +526,7 @@ export class PainelPcPage {
   }
 
   async onRegistrarModal(): Promise<void> {
+    if (!this.podeEditar()) return;
     const linha = this.modalRow();
     if (!linha) {
       return;
@@ -585,6 +600,7 @@ export class PainelPcPage {
   }
 
   async toggleFalta(row: RosterRow): Promise<void> {
+    if (!this.podeEditar()) return;
     try {
       if (row.statusEfetivo === 'FALTA' && row.detalheId) {
         await this.lancamentoService.removerFalta(row.detalheId);
@@ -602,6 +618,7 @@ export class PainelPcPage {
   }
 
   async toggleAtraso(row: RosterRow): Promise<void> {
+    if (!this.podeEditar()) return;
     try {
       if (row.statusEfetivo === 'ATRASADO' && row.detalheId) {
         await this.lancamentoService.removerAtraso(row.detalheId);
@@ -619,6 +636,7 @@ export class PainelPcPage {
   }
 
   async toggleRemanejamento(row: RosterRow): Promise<void> {
+    if (!this.podeEditar()) return;
     if (!row.detalheId) {
       return;
     }
@@ -631,6 +649,7 @@ export class PainelPcPage {
   }
 
   async toggleLicenca(row: RosterRow): Promise<void> {
+    if (!this.podeEditar()) return;
     if (!row.detalheId) {
       return;
     }
@@ -643,6 +662,7 @@ export class PainelPcPage {
   }
 
   abrirNovaViatura(): void {
+    if (!this.podeEditar()) return;
     this.novaViaturaAberta.set(true);
     this.novaViaturaNome.set('');
     this.novaViaturaTipo.set('GT_TATICO');
@@ -662,6 +682,7 @@ export class PainelPcPage {
   }
 
   async onCriarViatura(): Promise<void> {
+    if (!this.podeEditar()) return;
     this.criandoViatura.set(true);
     this.errorMessage.set(null);
     try {
@@ -713,6 +734,7 @@ export class PainelPcPage {
   }
 
   async onDrop(event: CdkDragDrop<RosterRow[], RosterRow[], RosterRow>): Promise<void> {
+    if (!this.podeEditar()) return;
     if (event.previousContainer === event.container) {
       return;
     }
