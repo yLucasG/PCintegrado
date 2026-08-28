@@ -1,7 +1,14 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
-export type StatusEfetivo = 'PREVISTO' | 'FALTA' | 'ATRASADO' | 'SUBSTITUIDO' | 'FOLGA' | 'REMANEJADO';
+export type StatusEfetivo =
+  | 'PREVISTO'
+  | 'FALTA'
+  | 'ATRASADO'
+  | 'SUBSTITUIDO'
+  | 'FOLGA'
+  | 'REMANEJADO'
+  | 'LICENCA';
 
 export interface RosterRow {
   escalaMensalId: string;
@@ -30,6 +37,7 @@ export interface RegistrarAtrasoInput {
   escala_mensal_id?: string | null;
   horario_chegada?: string | null;
   motivo?: string | null;
+  sei_numero?: string | null;
 }
 
 export interface RegistrarPermutaInput {
@@ -61,11 +69,20 @@ export interface RegistrarRemanejamentoInput {
   destino: string;
 }
 
+export interface RegistrarLicencaInput {
+  policial_matricula: string;
+  data_inicio: string;
+  data_fim: string;
+  escala_mensal_id?: string | null;
+  sei_numero?: string | null;
+}
+
 export interface BaixaRow {
   id: string;
   guarnicaoId: string;
   horarioInicio: string;
   motivo: string | null;
+  seiNumero: string | null;
 }
 
 export interface RegistrarBaixaInput {
@@ -73,6 +90,7 @@ export interface RegistrarBaixaInput {
   guarnicao_id: string;
   horario_inicio: string;
   motivo?: string | null;
+  sei_numero?: string | null;
 }
 
 export interface OsRow {
@@ -80,6 +98,8 @@ export interface OsRow {
   guarnicaoId: string;
   horarioInicio: string;
   numeroOs: string;
+  situacao: string | null;
+  local: string | null;
 }
 
 export interface RegistrarOsInput {
@@ -87,6 +107,30 @@ export interface RegistrarOsInput {
   guarnicao_id: string;
   horario_inicio: string;
   numero_os: string;
+  situacao?: string | null;
+  local?: string | null;
+}
+
+export type GrupoFuncaoFixa = 'GUARDA' | 'PC_BPM' | 'COPOM';
+
+export interface FuncaoFixaRow {
+  id: string;
+  grupo: GrupoFuncaoFixa;
+  funcao: string;
+  horarioInicio: string;
+  horarioFim: string;
+  policialMatricula: string;
+  foneCmt: string | null;
+}
+
+export interface RegistrarFuncaoFixaInput {
+  data: string;
+  grupo: GrupoFuncaoFixa;
+  funcao: string;
+  horario_inicio: string;
+  horario_fim: string;
+  policial_matricula: string;
+  fone_cmt?: string | null;
 }
 
 interface RosterRpcRow {
@@ -103,14 +147,16 @@ export class LancamentoService {
   private readonly supabase = inject(SupabaseService);
 
   async listRosterDoDia(data: string): Promise<RosterRow[]> {
-    const [rosterRes, faltasRes, atrasosRes, permutasRes, folgasRes, remanejamentosRes] = await Promise.all([
-      this.supabase.client.rpc('fn_resolve_escala_dia', { p_data: data }),
-      this.supabase.client.from('lancamento_faltas').select('*').eq('data', data),
-      this.supabase.client.from('lancamento_atrasos').select('*').eq('data', data),
-      this.supabase.client.from('lancamento_permutas').select('*').eq('data', data),
-      this.supabase.client.from('lancamento_folgas').select('*').eq('data', data),
-      this.supabase.client.from('lancamento_remanejamentos').select('*').eq('data', data),
-    ]);
+    const [rosterRes, faltasRes, atrasosRes, permutasRes, folgasRes, remanejamentosRes, licencasRes] =
+      await Promise.all([
+        this.supabase.client.rpc('fn_resolve_escala_dia', { p_data: data }),
+        this.supabase.client.from('lancamento_faltas').select('*').eq('data', data),
+        this.supabase.client.from('lancamento_atrasos').select('*').eq('data', data),
+        this.supabase.client.from('lancamento_permutas').select('*').eq('data', data),
+        this.supabase.client.from('lancamento_folgas').select('*').eq('data', data),
+        this.supabase.client.from('lancamento_remanejamentos').select('*').eq('data', data),
+        this.supabase.client.from('lancamento_licencas').select('*').lte('data_inicio', data).gte('data_fim', data),
+      ]);
 
     if (rosterRes.error) throw rosterRes.error;
     if (faltasRes.error) throw faltasRes.error;
@@ -118,6 +164,7 @@ export class LancamentoService {
     if (permutasRes.error) throw permutasRes.error;
     if (folgasRes.error) throw folgasRes.error;
     if (remanejamentosRes.error) throw remanejamentosRes.error;
+    if (licencasRes.error) throw licencasRes.error;
 
     const roster = (rosterRes.data ?? []) as RosterRpcRow[];
     const faltas = (faltasRes.data ?? []) as { id: string; policial_matricula: string; motivo: string | null }[];
@@ -132,6 +179,12 @@ export class LancamentoService {
       policial_matricula: string;
       destino: string;
     }[];
+    const licencas = (licencasRes.data ?? []) as {
+      id: string;
+      policial_matricula: string;
+      data_inicio: string;
+      data_fim: string;
+    }[];
 
     return roster.map((row): RosterRow => {
       const base = {
@@ -142,6 +195,16 @@ export class LancamentoService {
         horarioInicio: row.horario_inicio,
         horarioFim: row.horario_fim,
       };
+
+      const licenca = licencas.find((l) => l.policial_matricula === row.policial_matricula);
+      if (licenca) {
+        return {
+          ...base,
+          statusEfetivo: 'LICENCA',
+          detalhe: `${licenca.data_inicio} a ${licenca.data_fim}`,
+          detalheId: licenca.id,
+        };
+      }
 
       const falta = faltas.find((f) => f.policial_matricula === row.policial_matricula);
       if (falta) {
@@ -201,6 +264,7 @@ export class LancamentoService {
       escala_mensal_id: input.escala_mensal_id ?? null,
       horario_chegada: input.horario_chegada ?? null,
       motivo: input.motivo ?? null,
+      sei_numero: input.sei_numero ?? null,
     });
     if (error) throw error;
   }
@@ -258,6 +322,22 @@ export class LancamentoService {
     if (error) throw error;
   }
 
+  async registrarLicenca(input: RegistrarLicencaInput): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_licencas').insert({
+      policial_matricula: input.policial_matricula,
+      data_inicio: input.data_inicio,
+      data_fim: input.data_fim,
+      escala_mensal_id: input.escala_mensal_id ?? null,
+      sei_numero: input.sei_numero ?? null,
+    });
+    if (error) throw error;
+  }
+
+  async removerLicenca(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_licencas').delete().eq('id', id);
+    if (error) throw error;
+  }
+
   async listBaixasDoDia(data: string): Promise<BaixaRow[]> {
     const { data: rows, error } = await this.supabase.client
       .from('lancamento_baixas')
@@ -265,12 +345,19 @@ export class LancamentoService {
       .eq('data', data);
     if (error) throw error;
     return (
-      (rows ?? []) as { id: string; guarnicao_id: string; horario_inicio: string; motivo: string | null }[]
+      (rows ?? []) as {
+        id: string;
+        guarnicao_id: string;
+        horario_inicio: string;
+        motivo: string | null;
+        sei_numero: string | null;
+      }[]
     ).map((r) => ({
       id: r.id,
       guarnicaoId: r.guarnicao_id,
       horarioInicio: r.horario_inicio,
       motivo: r.motivo,
+      seiNumero: r.sei_numero,
     }));
   }
 
@@ -280,6 +367,7 @@ export class LancamentoService {
       guarnicao_id: input.guarnicao_id,
       horario_inicio: input.horario_inicio,
       motivo: input.motivo ?? null,
+      sei_numero: input.sei_numero ?? null,
     });
     if (error) throw error;
   }
@@ -293,12 +381,21 @@ export class LancamentoService {
     const { data: rows, error } = await this.supabase.client.from('lancamento_os').select('*').eq('data', data);
     if (error) throw error;
     return (
-      (rows ?? []) as { id: string; guarnicao_id: string; horario_inicio: string; numero_os: string }[]
+      (rows ?? []) as {
+        id: string;
+        guarnicao_id: string;
+        horario_inicio: string;
+        numero_os: string;
+        situacao: string | null;
+        local: string | null;
+      }[]
     ).map((r) => ({
       id: r.id,
       guarnicaoId: r.guarnicao_id,
       horarioInicio: r.horario_inicio,
       numeroOs: r.numero_os,
+      situacao: r.situacao,
+      local: r.local,
     }));
   }
 
@@ -308,12 +405,59 @@ export class LancamentoService {
       guarnicao_id: input.guarnicao_id,
       horario_inicio: input.horario_inicio,
       numero_os: input.numero_os,
+      situacao: input.situacao ?? null,
+      local: input.local ?? null,
     });
     if (error) throw error;
   }
 
   async removerOs(id: string): Promise<void> {
     const { error } = await this.supabase.client.from('lancamento_os').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async listFuncoesFixasDoDia(data: string): Promise<FuncaoFixaRow[]> {
+    const { data: rows, error } = await this.supabase.client
+      .from('lancamento_funcoes_fixas')
+      .select('*')
+      .eq('data', data);
+    if (error) throw error;
+    return (
+      (rows ?? []) as {
+        id: string;
+        grupo: GrupoFuncaoFixa;
+        funcao: string;
+        horario_inicio: string;
+        horario_fim: string;
+        policial_matricula: string;
+        fone_cmt: string | null;
+      }[]
+    ).map((r) => ({
+      id: r.id,
+      grupo: r.grupo,
+      funcao: r.funcao,
+      horarioInicio: r.horario_inicio,
+      horarioFim: r.horario_fim,
+      policialMatricula: r.policial_matricula,
+      foneCmt: r.fone_cmt,
+    }));
+  }
+
+  async registrarFuncaoFixa(input: RegistrarFuncaoFixaInput): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_funcoes_fixas').insert({
+      data: input.data,
+      grupo: input.grupo,
+      funcao: input.funcao,
+      horario_inicio: input.horario_inicio,
+      horario_fim: input.horario_fim,
+      policial_matricula: input.policial_matricula,
+      fone_cmt: input.fone_cmt ?? null,
+    });
+    if (error) throw error;
+  }
+
+  async removerFuncaoFixa(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_funcoes_fixas').delete().eq('id', id);
     if (error) throw error;
   }
 }
