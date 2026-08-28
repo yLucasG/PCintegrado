@@ -1,6 +1,21 @@
 import { TestBed } from '@angular/core/testing';
-import { AuthService } from './auth.service';
+import { AuthService, companhiaDoRole } from './auth.service';
 import { SupabaseService } from './supabase.service';
+
+describe('companhiaDoRole', () => {
+  it('mapeia cada role de CIA para a companhia correspondente', () => {
+    expect(companhiaDoRole('CIA_1')).toBe('1ª CPM');
+    expect(companhiaDoRole('CIA_2')).toBe('2ª CPM');
+    expect(companhiaDoRole('CIA_3')).toBe('3ª CPM');
+    expect(companhiaDoRole('PCTAT')).toBe('PCTAT');
+    expect(companhiaDoRole('PJES')).toBe('PJES');
+  });
+
+  it('retorna null para perfis sem restrição de companhia', () => {
+    expect(companhiaDoRole('ADMIN')).toBeNull();
+    expect(companhiaDoRole('PC_LANCAMENTO')).toBeNull();
+  });
+});
 
 describe('AuthService', () => {
   function buildSupabaseStub(sessionUserId: string | null) {

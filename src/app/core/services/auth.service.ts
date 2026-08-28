@@ -17,6 +17,24 @@ export interface PerfilUsuario {
   role: RoleUsuario;
 }
 
+/** Companhia à qual o perfil está restrito, ou null quando vê tudo. */
+export function companhiaDoRole(role: RoleUsuario): string | null {
+  switch (role) {
+    case 'CIA_1':
+      return '1ª CPM';
+    case 'CIA_2':
+      return '2ª CPM';
+    case 'CIA_3':
+      return '3ª CPM';
+    case 'PCTAT':
+      return 'PCTAT';
+    case 'PJES':
+      return 'PJES';
+    default:
+      return null;
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly supabase = inject(SupabaseService);
