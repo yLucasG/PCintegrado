@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeToggle } from '../theme-toggle/theme-toggle';
 
@@ -16,6 +16,7 @@ const PERFIS_COM_ACESSO_POLICIAIS = ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'
 })
 export class TopBar {
   readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   podeGerenciarEscalas(): boolean {
     const role = this.authService.currentPerfil?.role;
@@ -32,7 +33,8 @@ export class TopBar {
     return !!role && PERFIS_COM_ACESSO_POLICIAIS.includes(role);
   }
 
-  signOut(): void {
-    void this.authService.signOut();
+  async signOut(): Promise<void> {
+    await this.authService.signOut();
+    await this.router.navigate(['/login']);
   }
 }
