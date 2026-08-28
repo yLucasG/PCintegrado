@@ -39,6 +39,16 @@ interface ViaturaDesativada {
   motivo: string | null;
 }
 
+interface CardChave {
+  guarnicaoId: string;
+  horarioInicio: string;
+}
+
+interface ViaturasPorBairro {
+  bairro: string;
+  total: number;
+}
+
 @Component({
   selector: 'app-dashboard-page',
   imports: [CommonModule, RouterLink],
@@ -56,6 +66,7 @@ export class DashboardPage {
   readonly roster = signal<RosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
+  readonly filtroHorario = signal('');
 
   readonly statusOrder = STATUS_ORDER;
 
@@ -63,25 +74,51 @@ export class DashboardPage {
     void this.reload();
   }
 
-  get totalEscalado(): number {
-    return this.roster().length;
+  get horariosDisponiveis(): string[] {
+    const horarios = new Set(this.roster().map((r) => r.horarioInicio));
+    return Array.from(horarios).sort();
   }
 
-  get totalCards(): number {
-    const chaves = new Set(this.roster().map((r) => `${r.guarnicaoId}__${r.horarioInicio}`));
-    return chaves.size;
+  get rosterFiltrado(): RosterRow[] {
+    const horario = this.filtroHorario();
+    return horario ? this.roster().filter((r) => r.horarioInicio === horario) : this.roster();
   }
 
-  get totalDesativadas(): number {
-    return this.baixas().length;
+  get baixasFiltradas(): BaixaRow[] {
+    const horario = this.filtroHorario();
+    return horario ? this.baixas().filter((b) => b.horarioInicio === horario) : this.baixas();
+  }
+
+  get totalLancados(): number {
+    return this.rosterFiltrado.length;
+  }
+
+  private get cardChaves(): CardChave[] {
+    const chaves = new Map<string, CardChave>();
+    for (const r of this.rosterFiltrado) {
+      const chave = `${r.guarnicaoId}__${r.horarioInicio}`;
+      if (!chaves.has(chave)) {
+        chaves.set(chave, { guarnicaoId: r.guarnicaoId, horarioInicio: r.horarioInicio });
+      }
+    }
+    return Array.from(chaves.values());
+  }
+
+  private get cardsAtivos(): CardChave[] {
+    const baixadas = new Set(this.baixasFiltradas.map((b) => `${b.guarnicaoId}__${b.horarioInicio}`));
+    return this.cardChaves.filter((c) => !baixadas.has(`${c.guarnicaoId}__${c.horarioInicio}`));
   }
 
   get totalAtivas(): number {
-    return Math.max(0, this.totalCards - this.totalDesativadas);
+    return this.cardsAtivos.length;
+  }
+
+  get totalDesativadas(): number {
+    return this.baixasFiltradas.length;
   }
 
   get viaturasDesativadas(): ViaturaDesativada[] {
-    return this.baixas()
+    return this.baixasFiltradas
       .map((b) => ({
         nome: this.guarnicoes().find((g) => g.id === b.guarnicaoId)?.nome ?? '—',
         horarioInicio: b.horarioInicio,
@@ -90,8 +127,19 @@ export class DashboardPage {
       .sort((a, b) => a.nome.localeCompare(b.nome));
   }
 
+  get viaturasPorBairro(): ViaturasPorBairro[] {
+    const contagem = new Map<string, number>();
+    for (const card of this.cardsAtivos) {
+      const bairro = this.guarnicoes().find((g) => g.id === card.guarnicaoId)?.area_atuacao ?? 'Sem área definida';
+      contagem.set(bairro, (contagem.get(bairro) ?? 0) + 1);
+    }
+    return Array.from(contagem.entries())
+      .map(([bairro, total]) => ({ bairro, total }))
+      .sort((a, b) => b.total - a.total || a.bairro.localeCompare(b.bairro));
+  }
+
   contagemPorStatus(status: StatusEfetivo): number {
-    return this.roster().filter((r) => r.statusEfetivo === status).length;
+    return this.rosterFiltrado.filter((r) => r.statusEfetivo === status).length;
   }
 
   statusLabel(status: StatusEfetivo): string {
