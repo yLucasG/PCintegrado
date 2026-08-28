@@ -50,11 +50,13 @@ Guarnições **motorizadas** de cada escala (as que aparecem no Mapa de Força):
 - **GG 16450/16550** (Guarnição de Graduado) → `tipo = GG` (novo)
 - **CR 16750** (Carro de Reforço) → `tipo = CR` (novo)
 - **GT de comando/apoio** — GT 16000, 16100, 16200, 16300 da 1ª CPM →
-  `tipo = GT_ORDINARIO`, recorrência `TODOS_OS_DIAS`
+  `tipo = GT_ORDINARIO`, recorrência `PARES` + `IMPARES` (o PDF traz
+  duplas distintas para dia par e ímpar)
 - **Operação Maria da Penha** (GT 16150, 1ª CPM) → `tipo = GT_ORDINARIO`,
   recorrência `SEG_A_SEX`, `nome = 'Operação Maria da Penha (GT 16150)'`
 - **Operação Transporte Seguro / OTS** (GT 16250/16350, 2ª CPM) →
-  `tipo = GT_ORDINARIO`, `nome = 'Operação Transporte Seguro / OTS (GT 16250/16350)'`
+  `tipo = GT_ORDINARIO`, recorrência `PARES` + `IMPARES`,
+  `nome = 'Operação Transporte Seguro / OTS (GT 16250/16350)'`
 
 ### Fora de escopo
 
@@ -95,9 +97,11 @@ Padrão herdado do seed da 3ª CPM: `"<PREFIXO> - <área>"` (ex.:
 
 ### Recorrência
 
-- `PARES` / `IMPARES` — turnos de dia par / ímpar
+- `PARES` / `IMPARES` — turnos de dia par / ímpar (inclui GT 16000/16100/
+  16200/16300 e OTS: cada guarnição tem duplas distintas para par e ímpar)
 - `SEG_A_SEX` — Maria da Penha
-- `TODOS_OS_DIAS` — GT 16000/16100/16200/16300 e OTS
+- `TODOS_OS_DIAS` — não usado neste seed (os PDFs sempre distinguem par/ímpar
+  ou usam SEG_A_SEX / DIAS_ESPECIFICOS)
 - `DIAS_ESPECIFICOS` — equipes ALFA/BRAVO/CHARLIE/DELTA de GG e CR:
   - ALFA: `{4,8,12,16,20,24,28}`
   - BRAVO: `{1,5,9,13,17,21,25,29}`
@@ -123,15 +127,13 @@ Um policial só pode estar em **uma** guarnição.
    guarnição, vale a **primeira** aparição na ordem do documento.
 3. **Realocação a partir da 3ª CPM:** se a matrícula já existe em
    `escala_mensal` (carga da 3ª CPM) e passa a constar numa escala de maior
-   precedência, a migration de seed:
-   - `delete from public.escala_mensal where policial_matricula = '<mat>'`
-     (remove a(s) linha(s) da 3ª CPM);
-   - `update public.policiais set companhia_id = <nova>, atualizado_em = now()
-     where matricula = '<mat>'`;
-   - insere a(s) nova(s) linha(s).
-   *(Conferência preliminar: nenhuma das 36 matrículas do seed da 3ª CPM
-   aparece nas três escalas novas, então na prática este passo tende a ficar
-   vazio — mas o plano deve validar mecanicamente.)*
+   precedência, a migration de seed removeria a(s) linha(s) da 3ª CPM,
+   ajustaria `policiais.companhia_id` e inseriria as novas linhas.
+   **Conferência feita na extração:** os efetivos das quatro escalas
+   (36 matrículas da 3ª CPM + 1ª CPM + PCTAT + 2ª CPM) são **disjuntos** —
+   nenhuma matrícula se repete entre escalas. Este passo fica vazio; a
+   migration não contém `delete`/`update`. O plano revalida via SQL após
+   aplicar.
 4. **Inserção idempotente:**
    - `insert into public.viaturas (...) ... on conflict (prefixo) do nothing`
    - `insert into public.policiais (...) ... on conflict (matricula) do nothing`
@@ -160,15 +162,14 @@ alter type public.tipo_guarnicao add value 'CR';
 `supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql`,
 nesta ordem:
 
-1. `delete from public.escala_mensal where policial_matricula in (...)` —
-   matrículas da 3ª CPM realocadas (pode ser vazio).
-2. `insert into public.viaturas ... on conflict (prefixo) do nothing`
-3. `insert into public.policiais ... on conflict (matricula) do nothing`
-4. `update public.policiais set companhia_id = ... where matricula in (...)` —
-   realocados que já existiam.
-5. `insert into public.guarnicoes ...` — UUIDs fixos na faixa
+1. `insert into public.viaturas ... on conflict (prefixo) do nothing`
+2. `insert into public.policiais ... on conflict (matricula) do nothing`
+3. `insert into public.guarnicoes ...` — UUIDs fixos na faixa
    `b0000000-0000-4000-8000-0000000000XX` (a 3ª CPM usa a faixa `a0…`).
-6. `insert into public.escala_mensal ...` — linhas já deduplicadas.
+4. `insert into public.escala_mensal ...` — linhas já deduplicadas.
+
+Sem `delete`/`update`: os efetivos das quatro escalas são disjuntos
+(ver Regras de deduplicação, item 3).
 
 ### Front-end
 
@@ -187,9 +188,10 @@ de tipo não são assertados diretamente).
    from escala_mensal group by 1,2 having count(*) > 1` só deve trazer casos
   legítimos (mesmo policial em turnos de recorrência diferente da mesma
   guarnição — não deve ocorrer neste seed) → esperado: 0 linhas.
-- `select * from fn_resolve_escala_dia('2026-08-11')` (dia ímpar) e
-  `('2026-08-12')` (dia par) retornam guarnições das quatro companhias e
-  nenhuma matrícula repetida.
+- `select policial_matricula, count(*) from fn_resolve_escala_dia('2026-08-11')
+   group by 1 having count(*) > 1` (dia ímpar) e idem para `'2026-08-12'`
+  (dia par) → 0 linhas (nenhuma matrícula escalada em dois lugares no
+  mesmo dia).
 - `npm test -- --watch=false` e `npm run build` verdes.
 - No Relatório SEI, a seção "resumo por tipo" lista `GG` e `CR`.
 - Deploy: `./tools/supabase.exe db push` aplica `20260827100000` e
@@ -208,10 +210,10 @@ UUIDs `b0000000-0000-4000-8000-0000000000XX` (hex do índice).
 | 03 | GT 16113 - São José / Santo Antônio | GT_TATICO | 16113 | ÍMPARES 07–19 / 19–07; PARES 07–19 / 19–07 |
 | 04 | Ciclopatrulha 16111/112/113 - São José / Santo Antônio | CP | CP16111, CP16112, CP16113 | PARES 07–15 |
 | 05 | Ciclopatrulha 16114/115/116 - São José / Santo Antônio | CP | CP16114, CP16115, CP16116 | ÍMPARES 05–13 / 13–21; PARES 05–13 / 13–21 |
-| 06 | GT 16000 - Apoio ao Oficial de Operações | GT_ORDINARIO | GT16000 | TODOS_OS_DIAS (2 turnos 06–18 / 18–06, PAT+MOT) |
-| 07 | GT 16100 - Comando | GT_ORDINARIO | GT16100 | TODOS_OS_DIAS 06–18 |
-| 08 | GT 16200 - Subcomando | GT_ORDINARIO | GT16200 | TODOS_OS_DIAS 06–18 |
-| 09 | GT 16300 - Motorista de Fiscalização de POG/CP | GT_ORDINARIO | GT16300 | TODOS_OS_DIAS 05–17 (só MOT) |
+| 06 | GT 16000 - Apoio ao Oficial de Operações | GT_ORDINARIO | GT16000 | PARES 06–18 / 18–06; ÍMPARES 06–18 / 18–06 (PAT+MOT) |
+| 07 | GT 16100 - Comando | GT_ORDINARIO | GT16100 | PARES 06–18; ÍMPARES 06–18 (PAT+MOT) |
+| 08 | GT 16200 - Subcomando | GT_ORDINARIO | GT16200 | PARES 06–18; ÍMPARES 06–18 (PAT+MOT) |
+| 09 | GT 16300 - Motorista de Fiscalização de POG/CP | GT_ORDINARIO | GT16300 | PARES 05–17; ÍMPARES 05–17 (só MOT) |
 | 10 | Operação Maria da Penha (GT 16150) | GT_ORDINARIO | GT16150 | SEG_A_SEX 06–14 |
 
 ### 2ª CPM (`companhia = '2ª CPM'`) — 7 guarnições
@@ -224,7 +226,7 @@ UUIDs `b0000000-0000-4000-8000-0000000000XX` (hex do índice).
 | 14 | GT 16224 - RHP / Ilha do Leite | GT_TATICO | 16224 | ÍMPARES 08–20 / 20–08; PARES 08–20 |
 | 15 | Motopatrulha 16221/222/223 - Ilha do Leite / Joana Bezerra / Paissandu | MO | MO16221, MO16222, MO16223 | ÍMPARES 06–14 / 15–23; PARES 06–14 (só linhas com efetivo) |
 | 16 | Ciclopatrulha 16221/222/223 - Ilha do Leite | CP | CP16221, CP16222, CP16223 | ÍMPARES 06–14 / 14–22; PARES 06–14 / 14–22 |
-| 17 | Operação Transporte Seguro / OTS (GT 16250/16350) | GT_ORDINARIO | GT16250, GT16350 | TODOS_OS_DIAS 13–01 |
+| 17 | Operação Transporte Seguro / OTS (GT 16250/16350) | GT_ORDINARIO | GT16250, GT16350 | PARES 13–01; ÍMPARES 13–01 (2 CMT + 2 MOT + 1 PAT/turno) |
 
 ### PCTAT (`companhia = 'PCTAT'`) — 5 guarnições
 
