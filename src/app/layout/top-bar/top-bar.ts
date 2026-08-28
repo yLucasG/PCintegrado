@@ -6,6 +6,7 @@ import { ThemeToggle } from '../theme-toggle/theme-toggle';
 
 const PERFIS_COM_ACESSO_ESCALAS = ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'];
 const PERFIS_COM_ACESSO_RELATORIO_SEI = ['ADMIN', 'PC_LANCAMENTO'];
+const PERFIS_COM_ACESSO_POLICIAIS = ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT', 'PJES'];
 
 @Component({
   selector: 'app-top-bar',
@@ -24,6 +25,11 @@ export class TopBar {
   podeGerarRelatorioSei(): boolean {
     const role = this.authService.currentPerfil?.role;
     return !!role && PERFIS_COM_ACESSO_RELATORIO_SEI.includes(role);
+  }
+
+  podeVerPoliciais(): boolean {
+    const role = this.authService.currentPerfil?.role;
+    return !!role && PERFIS_COM_ACESSO_POLICIAIS.includes(role);
   }
 
   signOut(): void {

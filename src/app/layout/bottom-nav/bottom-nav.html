@@ -12,9 +12,11 @@
   <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/lancamento" routerLinkActive="text-blue-600">
     Painel PC
   </a>
-  <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/policiais" routerLinkActive="text-blue-600">
-    Policiais
-  </a>
+  @if (podeVerPoliciais()) {
+    <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/policiais" routerLinkActive="text-blue-600">
+      Policiais
+    </a>
+  }
   @if (podeGerenciarEscalas()) {
     <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/viaturas" routerLinkActive="text-blue-600">
       Viaturas

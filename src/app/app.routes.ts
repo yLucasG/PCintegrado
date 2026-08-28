@@ -33,6 +33,8 @@ export const routes: Routes = [
         path: 'policiais',
         loadComponent: () =>
           import('./features/policiais/policiais-page/policiais-page').then((m) => m.PoliciaisPage),
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT', 'PJES'] },
       },
       {
         path: 'viaturas',
