@@ -23,8 +23,11 @@
       <button
         type="button"
         class="rounded-full px-3 py-1 text-sm text-slate-700 dark:text-slate-300"
-        [ngClass]="{ 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900': filtroHorario() === '' }"
-        (click)="filtroHorario.set('')"
+        [ngClass]="{
+          'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900':
+            filtroHorario() === '' && filtroMomento() === '',
+        }"
+        (click)="limparFiltroHorario()"
       >
         Todos
       </button>
@@ -35,11 +38,27 @@
           [ngClass]="{
             'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900': filtroHorario() === horario,
           }"
-          (click)="filtroHorario.set(horario)"
+          (click)="selecionarHorario(horario)"
         >
           {{ horario.slice(0, 5) }}
         </button>
       }
+      <span class="mx-1 h-4 w-px bg-slate-300 dark:bg-slate-700"></span>
+      <button
+        type="button"
+        class="rounded-full px-3 py-1 text-sm text-slate-700 dark:text-slate-300"
+        [ngClass]="{ 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900': filtroMomento() !== '' }"
+        (click)="usarAgora()"
+      >
+        Ativas agora
+      </button>
+      <input
+        type="time"
+        class="rounded border border-slate-300 bg-white px-2 py-1 text-sm text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        [ngModel]="filtroMomento()"
+        (ngModelChange)="selecionarMomento($event)"
+        name="filtroMomento"
+      />
     </div>
 
     <input

@@ -10,6 +10,7 @@ import {
   OsRow,
   RosterRow,
   StatusEfetivo,
+  turnoAtivoEm,
 } from '../../../core/services/lancamento.service';
 import { GuarnicoesService, GuarnicaoRow, TipoGuarnicao } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
@@ -76,6 +77,7 @@ export class PainelPcPage {
   readonly errorMessage = signal<string | null>(null);
 
   readonly filtroHorario = signal('');
+  readonly filtroMomento = signal('');
   readonly buscaPolicial = signal('');
 
   readonly novaViaturaAberta = signal(false);
@@ -140,10 +142,35 @@ export class PainelPcPage {
     return Array.from(horarios).sort();
   }
 
+  selecionarHorario(horario: string): void {
+    this.filtroHorario.set(horario);
+    this.filtroMomento.set('');
+  }
+
+  selecionarMomento(momento: string): void {
+    this.filtroMomento.set(momento);
+    this.filtroHorario.set('');
+  }
+
+  usarAgora(): void {
+    const agora = new Date();
+    const hh = String(agora.getHours()).padStart(2, '0');
+    const mm = String(agora.getMinutes()).padStart(2, '0');
+    this.selecionarMomento(`${hh}:${mm}`);
+  }
+
+  limparFiltroHorario(): void {
+    this.filtroHorario.set('');
+    this.filtroMomento.set('');
+  }
+
   get rosterFiltrado(): RosterRow[] {
     let rows = this.roster();
+    const momento = this.filtroMomento();
     const horario = this.filtroHorario();
-    if (horario) {
+    if (momento) {
+      rows = rows.filter((r) => turnoAtivoEm(r.horarioInicio, r.horarioFim, momento));
+    } else if (horario) {
       rows = rows.filter((r) => r.horarioInicio === horario);
     }
     const busca = this.buscaPolicial().trim().toLowerCase();
