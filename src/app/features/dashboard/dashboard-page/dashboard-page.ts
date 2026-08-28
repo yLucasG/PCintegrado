@@ -1,11 +1,13 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   BaixaRow,
   LancamentoService,
   RosterRow,
   StatusEfetivo,
+  turnoAtivoEm,
 } from '../../../core/services/lancamento.service';
 import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
 
@@ -61,7 +63,7 @@ interface ViaturasPorBairro {
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
 })
@@ -76,7 +78,10 @@ export class DashboardPage {
   readonly roster = signal<RosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
+  /** Filtro por horário de início exato (chips "05:00", "06:00"...). */
   readonly filtroHorario = signal('');
+  /** Filtro por momento ("HH:MM"): conta o que está ativo naquele instante. */
+  readonly filtroMomento = signal('');
 
   readonly statusOrder = STATUS_ORDER;
 
@@ -89,12 +94,55 @@ export class DashboardPage {
     return Array.from(horarios).sort();
   }
 
+  /** Fim do turno de cada card (guarnição + início), extraído do roster. */
+  private get fimPorCard(): Map<string, string> {
+    const mapa = new Map<string, string>();
+    for (const r of this.roster()) {
+      mapa.set(`${r.guarnicaoId}__${r.horarioInicio}`, r.horarioFim);
+    }
+    return mapa;
+  }
+
+  selecionarHorario(horario: string): void {
+    this.filtroHorario.set(horario);
+    this.filtroMomento.set('');
+  }
+
+  selecionarMomento(momento: string): void {
+    this.filtroMomento.set(momento);
+    this.filtroHorario.set('');
+  }
+
+  usarAgora(): void {
+    const agora = new Date();
+    const hh = String(agora.getHours()).padStart(2, '0');
+    const mm = String(agora.getMinutes()).padStart(2, '0');
+    this.selecionarMomento(`${hh}:${mm}`);
+  }
+
+  limparFiltro(): void {
+    this.filtroHorario.set('');
+    this.filtroMomento.set('');
+  }
+
   get rosterFiltrado(): RosterRow[] {
+    const momento = this.filtroMomento();
+    if (momento) {
+      return this.roster().filter((r) => turnoAtivoEm(r.horarioInicio, r.horarioFim, momento));
+    }
     const horario = this.filtroHorario();
     return horario ? this.roster().filter((r) => r.horarioInicio === horario) : this.roster();
   }
 
   get baixasFiltradas(): BaixaRow[] {
+    const momento = this.filtroMomento();
+    if (momento) {
+      const fimPorCard = this.fimPorCard;
+      return this.baixas().filter((b) => {
+        const fim = fimPorCard.get(`${b.guarnicaoId}__${b.horarioInicio}`);
+        return fim ? turnoAtivoEm(b.horarioInicio, fim, momento) : false;
+      });
+    }
     const horario = this.filtroHorario();
     return horario ? this.baixas().filter((b) => b.horarioInicio === horario) : this.baixas();
   }

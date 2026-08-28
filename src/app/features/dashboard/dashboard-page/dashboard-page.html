@@ -8,16 +8,16 @@
 @if (loading()) {
   <p class="mt-6 text-slate-500 dark:text-slate-400">Carregando...</p>
 } @else {
-  <div class="mt-6 flex flex-wrap gap-2">
+  <div class="mt-6 flex flex-wrap items-center gap-2">
     <button
       type="button"
       class="rounded-full px-3 py-1 text-sm font-medium transition"
       [ngClass]="
-        filtroHorario() === ''
+        filtroHorario() === '' && filtroMomento() === ''
           ? 'bg-blue-600 text-white dark:bg-blue-500'
           : 'bg-white text-slate-600 ring-1 ring-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700'
       "
-      (click)="filtroHorario.set('')"
+      (click)="limparFiltro()"
     >
       Total do dia
     </button>
@@ -30,12 +30,43 @@
             ? 'bg-blue-600 text-white dark:bg-blue-500'
             : 'bg-white text-slate-600 ring-1 ring-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700'
         "
-        (click)="filtroHorario.set(horario)"
+        (click)="selecionarHorario(horario)"
       >
-        {{ horario }}
+        início {{ horario.slice(0, 5) }}
       </button>
     }
+
+    <span class="mx-1 h-5 w-px bg-slate-300 dark:bg-slate-700"></span>
+
+    <button
+      type="button"
+      class="rounded-full px-3 py-1 text-sm font-medium transition"
+      [ngClass]="
+        filtroMomento() !== ''
+          ? 'bg-blue-600 text-white dark:bg-blue-500'
+          : 'bg-white text-slate-600 ring-1 ring-slate-300 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-700'
+      "
+      (click)="usarAgora()"
+    >
+      Ativas agora
+    </button>
+    <label class="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-300">
+      às
+      <input
+        type="time"
+        class="rounded border border-slate-300 bg-white px-2 py-1 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+        [ngModel]="filtroMomento()"
+        (ngModelChange)="selecionarMomento($event)"
+        name="filtro-momento"
+      />
+    </label>
   </div>
+
+  @if (filtroMomento()) {
+    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">
+      Mostrando o que está ativo às <span class="font-semibold text-slate-700 dark:text-slate-200">{{ filtroMomento() }}</span>.
+    </p>
+  }
 
   <section class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
     <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">

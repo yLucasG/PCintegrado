@@ -1,6 +1,24 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 
+/**
+ * Diz se um turno `inicio`–`fim` está ativo no instante `momento`.
+ * Aceita "HH:MM" ou "HH:MM:SS" (compara os 5 primeiros caracteres).
+ *
+ * - turno normal (`inicio < fim`): ativo em `[inicio, fim)`
+ * - turno que vira a meia-noite (`inicio > fim`): ativo em `momento >= inicio`
+ *   ou `momento < fim`
+ * - turno de 24h (`inicio === fim`, ex. 06:00–06:00): sempre ativo
+ */
+export function turnoAtivoEm(inicio: string, fim: string, momento: string): boolean {
+  const i = inicio.slice(0, 5);
+  const f = fim.slice(0, 5);
+  const m = momento.slice(0, 5);
+  if (i === f) return true;
+  if (i < f) return m >= i && m < f;
+  return m >= i || m < f;
+}
+
 export type StatusEfetivo =
   | 'PREVISTO'
   | 'FALTA'

@@ -1,6 +1,35 @@
 import { TestBed } from '@angular/core/testing';
-import { LancamentoService } from './lancamento.service';
+import { LancamentoService, turnoAtivoEm } from './lancamento.service';
 import { SupabaseService } from './supabase.service';
+
+describe('turnoAtivoEm', () => {
+  it('turno normal: ativo dentro de [inicio, fim), inativo no fim', () => {
+    expect(turnoAtivoEm('06:00:00', '18:00:00', '06:00')).toBe(true);
+    expect(turnoAtivoEm('06:00:00', '18:00:00', '17:10')).toBe(true);
+    expect(turnoAtivoEm('06:00:00', '18:00:00', '18:00')).toBe(false);
+    expect(turnoAtivoEm('06:00:00', '18:00:00', '05:59')).toBe(false);
+    expect(turnoAtivoEm('06:00:00', '18:00:00', '22:00')).toBe(false);
+  });
+
+  it('a viatura das 05h já saiu às 17:10, a das 06h ainda está ativa', () => {
+    expect(turnoAtivoEm('05:00', '17:00', '17:10')).toBe(false);
+    expect(turnoAtivoEm('06:00', '18:00', '17:10')).toBe(true);
+  });
+
+  it('turno que vira a meia-noite: ativo antes e depois de 00h', () => {
+    expect(turnoAtivoEm('18:00:00', '06:00:00', '18:00')).toBe(true);
+    expect(turnoAtivoEm('18:00:00', '06:00:00', '23:00')).toBe(true);
+    expect(turnoAtivoEm('18:00:00', '06:00:00', '02:00')).toBe(true);
+    expect(turnoAtivoEm('18:00:00', '06:00:00', '05:59')).toBe(true);
+    expect(turnoAtivoEm('18:00:00', '06:00:00', '06:00')).toBe(false);
+    expect(turnoAtivoEm('18:00:00', '06:00:00', '12:00')).toBe(false);
+  });
+
+  it('turno de 24h (inicio === fim) está sempre ativo', () => {
+    expect(turnoAtivoEm('06:00:00', '06:00:00', '03:00')).toBe(true);
+    expect(turnoAtivoEm('06:00:00', '06:00:00', '15:00')).toBe(true);
+  });
+});
 
 describe('LancamentoService', () => {
   const rosterRpcRow = {
