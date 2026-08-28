@@ -15,6 +15,7 @@ import {
   CampoComplemento,
   RelatorioSeiInput,
   RelatorioSeiService,
+  TurnoRelatorio,
   montarRelatorioHtml,
 } from '../../../core/services/relatorio-sei.service';
 
@@ -44,6 +45,7 @@ export class RelatorioSeiPage {
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly data = signal(hojeIso());
+  readonly turno = signal<TurnoRelatorio>('DIURNO');
   readonly roster = signal<RosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
   readonly osRows = signal<OsRow[]>([]);
@@ -107,6 +109,7 @@ export class RelatorioSeiPage {
   private montarInput(): RelatorioSeiInput {
     return {
       data: this.data(),
+      turno: this.turno(),
       guarnicoes: this.guarnicoes(),
       policiais: this.policiais(),
       roster: this.roster(),

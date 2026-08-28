@@ -12,6 +12,32 @@
           name="data"
         />
       </label>
+      <div class="flex items-center gap-1 rounded-full border border-slate-300 p-1 dark:border-slate-700">
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-sm"
+          [ngClass]="
+            turno() === 'DIURNO'
+              ? 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900'
+              : 'text-slate-600 dark:text-slate-300'
+          "
+          (click)="turno.set('DIURNO')"
+        >
+          Diurno (06h–18h)
+        </button>
+        <button
+          type="button"
+          class="rounded-full px-3 py-1 text-sm"
+          [ngClass]="
+            turno() === 'NOTURNO'
+              ? 'bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900'
+              : 'text-slate-600 dark:text-slate-300'
+          "
+          (click)="turno.set('NOTURNO')"
+        >
+          Noturno (18h–06h)
+        </button>
+      </div>
       <button
         type="button"
         class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white dark:bg-blue-500"
