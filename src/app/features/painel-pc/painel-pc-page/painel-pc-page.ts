@@ -14,7 +14,7 @@ import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.
 import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
 import { EscalaMensalService } from '../../../core/services/escala-mensal.service';
 
-type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO';
+type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO' | 'LICENCA';
 
 interface CardGuarnicao {
   cardId: string;
@@ -37,6 +37,7 @@ const STATUS_BADGE_CLASSES: Record<StatusEfetivo, string> = {
   SUBSTITUIDO: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
   FOLGA: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   REMANEJADO: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
+  LICENCA: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
 };
 
 const STATUS_LABELS: Record<StatusEfetivo, string> = {
@@ -46,6 +47,7 @@ const STATUS_LABELS: Record<StatusEfetivo, string> = {
   SUBSTITUIDO: 'Substituído',
   FOLGA: 'Folga',
   REMANEJADO: 'Remanejado',
+  LICENCA: 'LTS/DTS',
 };
 
 @Component({
@@ -94,7 +96,7 @@ export class PainelPcPage {
   readonly salvandoOs = signal(false);
 
   readonly modalRow = signal<RosterRow | null>(null);
-  readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO'];
+  readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO', 'LICENCA'];
   readonly tipoLancamento = signal<TipoLancamento>('FALTA');
   readonly formSubstitutoMatricula = signal('');
   readonly formMotivo = signal('');
@@ -102,6 +104,8 @@ export class PainelPcPage {
   readonly formAutorizacao = signal('');
   readonly formDestino = signal('');
   readonly formHorarioChegada = signal('');
+  readonly formLicencaInicio = signal('');
+  readonly formLicencaFim = signal('');
   readonly registrando = signal(false);
 
   constructor() {
@@ -376,6 +380,8 @@ export class PainelPcPage {
     this.formAutorizacao.set('');
     this.formDestino.set('');
     this.formHorarioChegada.set('');
+    this.formLicencaInicio.set(this.data());
+    this.formLicencaFim.set(this.data());
   }
 
   fecharModal(): void {
@@ -435,6 +441,15 @@ export class PainelPcPage {
             destino: this.formDestino(),
           });
           break;
+        case 'LICENCA':
+          await this.lancamentoService.registrarLicenca({
+            policial_matricula: linha.policialMatricula,
+            escala_mensal_id: linha.escalaMensalId,
+            data_inicio: this.formLicencaInicio() || data,
+            data_fim: this.formLicencaFim() || data,
+            sei_numero: this.formSeiNumero() || null,
+          });
+          break;
       }
       this.fecharModal();
       await this.reloadRoster();
@@ -488,6 +503,18 @@ export class PainelPcPage {
       await this.reloadRoster();
     } catch {
       this.errorMessage.set('Não foi possível desfazer o remanejamento.');
+    }
+  }
+
+  async toggleLicenca(row: RosterRow): Promise<void> {
+    if (!row.detalheId) {
+      return;
+    }
+    try {
+      await this.lancamentoService.removerLicenca(row.detalheId);
+      await this.reloadRoster();
+    } catch {
+      this.errorMessage.set('Não foi possível desfazer a LTS/DTS.');
     }
   }
 

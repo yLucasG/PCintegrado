@@ -203,6 +203,18 @@
                         </button>
                       </div>
                     }
+                    @if (linha.statusEfetivo === 'LICENCA') {
+                      <div class="mt-1">
+                        <button
+                          type="button"
+                          class="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-sky-700 hover:bg-sky-200 dark:bg-sky-900 dark:text-sky-300 dark:hover:bg-sky-800"
+                          title="Desfazer LTS/DTS"
+                          (click)="toggleLicenca(linha)"
+                        >
+                          Desfazer LTS/DTS
+                        </button>
+                      </div>
+                    }
                   </div>
                 }
               </div>
@@ -341,6 +353,38 @@
               [ngModel]="formDestino()"
               (ngModelChange)="formDestino.set($event)"
               name="modalDestino"
+            />
+          }
+
+          @if (tipoLancamento() === 'LICENCA') {
+            <label class="text-xs text-slate-500 dark:text-slate-400">
+              Início
+              <input
+                class="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                type="date"
+                required
+                [ngModel]="formLicencaInicio()"
+                (ngModelChange)="formLicencaInicio.set($event)"
+                name="modalLicencaInicio"
+              />
+            </label>
+            <label class="text-xs text-slate-500 dark:text-slate-400">
+              Término
+              <input
+                class="mt-1 w-full rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                type="date"
+                required
+                [ngModel]="formLicencaFim()"
+                (ngModelChange)="formLicencaFim.set($event)"
+                name="modalLicencaFim"
+              />
+            </label>
+            <input
+              class="rounded border border-slate-300 bg-white px-3 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              placeholder="SEI Nº"
+              [ngModel]="formSeiNumero()"
+              (ngModelChange)="formSeiNumero.set($event)"
+              name="modalSeiLicenca"
             />
           }
 
