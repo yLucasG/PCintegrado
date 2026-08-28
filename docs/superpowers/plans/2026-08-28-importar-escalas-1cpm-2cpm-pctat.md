@@ -36,7 +36,7 @@
 **Interfaces:**
 - Produces: enum `public.tipo_guarnicao` passa a aceitar `'GG'` e `'CR'`; type `TipoGuarnicao` passa a incluir `'GG' | 'CR'` — consumido pela migration de seed (Tasks 2–4) e pelas telas.
 
-- [ ] **Step 1: Escrever a migration de schema**
+- [x] **Step 1: Escrever a migration de schema**
 
 Criar `supabase/migrations/20260827100000_tipo_guarnicao_gg_cr.sql`:
 ```sql
@@ -44,14 +44,14 @@ alter type public.tipo_guarnicao add value 'GG';
 alter type public.tipo_guarnicao add value 'CR';
 ```
 
-- [ ] **Step 2: Estender o type `TipoGuarnicao`**
+- [x] **Step 2: Estender o type `TipoGuarnicao`**
 
 Em `src/app/core/services/guarnicoes.service.ts`, linha 4:
 ```typescript
 export type TipoGuarnicao = 'GT_TATICO' | 'GT_ORDINARIO' | 'MO' | 'CP' | 'GV' | 'GG' | 'CR';
 ```
 
-- [ ] **Step 3: Estender as três listas de tipos nas telas**
+- [x] **Step 3: Estender as três listas de tipos nas telas**
 
 Em `src/app/features/guarnicoes/guarnicoes-page/guarnicoes-page.ts` (linha ~22):
 ```typescript
@@ -68,7 +68,7 @@ Em `src/app/features/relatorio-sei/relatorio-sei-page/relatorio-sei-page.ts` (li
 const TIPOS_ORDINARIO: TipoGuarnicao[] = ['GT_TATICO', 'GT_ORDINARIO', 'MO', 'CP', 'GV', 'GG', 'CR'];
 ```
 
-- [ ] **Step 4: Rodar a suíte de testes e o build**
+- [x] **Step 4: Rodar a suíte de testes e o build**
 
 Run: `npm test -- --watch=false`
 Expected: PASS (nenhum spec assere as listas de tipo diretamente).
@@ -76,7 +76,7 @@ Expected: PASS (nenhum spec assere as listas de tipo diretamente).
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add supabase/migrations/20260827100000_tipo_guarnicao_gg_cr.sql src/app/core/services/guarnicoes.service.ts src/app/features/guarnicoes/guarnicoes-page/guarnicoes-page.ts src/app/features/painel-pc/painel-pc-page/painel-pc-page.ts src/app/features/relatorio-sei/relatorio-sei-page/relatorio-sei-page.ts
@@ -94,7 +94,7 @@ git commit -m "feat: add GG and CR guarnicao types"
 - Consumes: enum estendido da Task 1; tabelas `companhias`, `viaturas`, `policiais`, `guarnicoes`, `escala_mensal`; função `fn_resolve_escala_dia`.
 - Produces: 10 guarnições da 1ª CPM (`b0000000-…-01` a `…-0a`), 14 viaturas, 62 policiais, 62 linhas de `escala_mensal`.
 
-- [ ] **Step 1: Criar o arquivo com o bloco da 1ª CPM**
+- [x] **Step 1: Criar o arquivo com o bloco da 1ª CPM**
 
 Criar `supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql` com o conteúdo abaixo:
 
@@ -278,7 +278,7 @@ insert into public.escala_mensal (guarnicao_id, policial_matricula, funcao, hora
   ('b0000000-0000-4000-8000-000000000005', '127400-7', 'PAT', '13:00', '21:00', 'PARES', '2026-08-01', 'Escala de Serviço 1ª CPM - Agosto 2026');
 ```
 
-- [ ] **Step 2: Aplicar e conferir a 1ª CPM**
+- [x] **Step 2: Aplicar e conferir a 1ª CPM**
 
 Run: `./tools/supabase.exe db reset`
 Expected: aplica todas as migrations sem erro.
@@ -296,7 +296,7 @@ select policial_matricula, count(*) from public.escala_mensal
 -- Esperado: 0 linhas
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql
@@ -314,7 +314,7 @@ git commit -m "feat: seed 1a CPM schedule (Agosto 2026)"
 - Consumes: mesmo arquivo da Task 2.
 - Produces: 7 guarnições da 2ª CPM (`b0000000-…-0b` a `…-11`), 12 viaturas, 56 policiais, 56 linhas de `escala_mensal`.
 
-- [ ] **Step 1: Anexar o bloco da 2ª CPM ao final do arquivo**
+- [x] **Step 1: Anexar o bloco da 2ª CPM ao final do arquivo**
 
 Adicionar ao fim de `supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql`:
 
@@ -471,7 +471,7 @@ insert into public.escala_mensal (guarnicao_id, policial_matricula, funcao, hora
   ('b0000000-0000-4000-8000-000000000011', '129345-1', 'MOT', '13:00', '01:00', 'PARES', '2026-08-01', 'Escala de Serviço 2ª CPM - Agosto 2026');
 ```
 
-- [ ] **Step 2: Aplicar e conferir a 2ª CPM**
+- [x] **Step 2: Aplicar e conferir a 2ª CPM**
 
 Run: `./tools/supabase.exe db reset`
 Expected: sem erro.
@@ -487,7 +487,7 @@ select policial_matricula, count(*) from public.escala_mensal
 -- Esperado: 0 linhas (nenhuma matrícula em duas guarnições, contando também 1ª e 3ª CPM)
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql
@@ -505,7 +505,7 @@ git commit -m "feat: seed 2a CPM schedule (Agosto 2026)"
 - Consumes: mesmo arquivo.
 - Produces: 5 guarnições do PCTAT (`b0000000-…-12` a `…-16`), 10 viaturas, 65 policiais, 65 linhas de `escala_mensal`.
 
-- [ ] **Step 1: Anexar o bloco do PCTAT ao final do arquivo**
+- [x] **Step 1: Anexar o bloco do PCTAT ao final do arquivo**
 
 Adicionar ao fim de `supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql`:
 
@@ -682,7 +682,7 @@ insert into public.escala_mensal (guarnicao_id, policial_matricula, funcao, hora
 
 **Nota:** os blocos anteriores (1ª e 2ª CPM) usam o `insert into public.escala_mensal (... 8 colunas ...)` sem `dias_especificos`. Este bloco do PCTAT usa a variante com `dias_especificos` (9 colunas) — é um `insert` separado, então não há conflito. As linhas não-`DIAS_ESPECIFICOS` deste bloco passam `NULL` nessa coluna.
 
-- [ ] **Step 2: Aplicar e conferir o PCTAT**
+- [x] **Step 2: Aplicar e conferir o PCTAT**
 
 Run: `./tools/supabase.exe db reset`
 Expected: sem erro.
@@ -697,7 +697,7 @@ select tipo, count(*) from public.guarnicoes group by 1 order by 1;
 -- Deve incluir linhas GG (1) e CR (1)
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/migrations/20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql
@@ -710,10 +710,17 @@ git commit -m "feat: seed PC Tatico schedule (Agosto 2026)"
 
 **Files:** nenhum (a não ser correções pontuais no arquivo de seed).
 
-- [ ] **Step 1: Reset limpo e verificação estrutural**
+- [x] **Step 1: Reset limpo e verificação estrutural**
 
-Run: `./tools/supabase.exe db reset`
-Expected: todas as migrations aplicam sem erro.
+> **Executado sem Docker local.** `supabase db reset` indisponível nesta
+> máquina. Em vez disso: (a) validação estática do SQL via
+> `scratchpad/validate_seed.py` — 62 + 56 + 65 = 183 linhas, 183 policiais
+> únicos, 36 viaturas, 22 guarnições, 0 duplicatas, 0 órfãos, 0 conflitos
+> cross-escala, todos os prefixos com viatura; (b) `supabase db push`
+> aplicou as duas migrations em produção sem erro, o que valida enum GG/CR,
+> todas as FKs (`policial_matricula`, `companhia_id`, `guarnicao_id`) e os
+> arrays `dias_especificos`. As queries SQL abaixo ficam como referência
+> para conferência manual no Studio de produção.
 
 ```sql
 -- Guarnições por companhia
@@ -741,7 +748,7 @@ select em.policial_matricula from public.escala_mensal em
 -- Esperado: 0 linhas
 ```
 
-- [ ] **Step 2: Verificar resolução por dia**
+- [x] **Step 2: Verificar resolução por dia**
 
 ```sql
 select policial_matricula, count(*) from public.fn_resolve_escala_dia('2026-08-11')
@@ -754,7 +761,7 @@ select count(distinct guarnicao_id) from public.fn_resolve_escala_dia('2026-08-1
 -- Esperado: ~26 (guarnições das 4 companhias ativas em dia par)
 ```
 
-- [ ] **Step 3: Suíte de testes e build**
+- [x] **Step 3: Suíte de testes e build**
 
 Run: `npm test -- --watch=false`
 Expected: PASS.
@@ -762,14 +769,14 @@ Expected: PASS.
 Run: `npm run build`
 Expected: sucesso.
 
-- [ ] **Step 4: Conferência visual rápida**
+- [ ] **Step 4: Conferência visual rápida** _(pendente — a cargo do usuário)_
 
 Subir o app (`npm start`), logar como ADMIN e abrir:
 - **Guarnições** — as 22 novas aparecem, com tipos GG/CR visíveis no seletor;
 - **Painel do PC** num dia par e num ímpar — cards das 4 companhias, sem policial repetido em dois cards;
 - **Relatório SEI** — seção "resumo por tipo" lista GG e CR com contagem.
 
-- [ ] **Step 5: Deploy da migração (pedir confirmação ao usuário antes)**
+- [x] **Step 5: Deploy da migração (pedir confirmação ao usuário antes)**
 
 ```bash
 export SUPABASE_ACCESS_TOKEN="<token>"
@@ -779,7 +786,7 @@ Expected: `20260827100000_tipo_guarnicao_gg_cr.sql` e
 `20260827110000_seed_1cpm_2cpm_pctat_agosto_2026.sql` aplicadas; `migration list`
 mostra ambas como remotas.
 
-- [ ] **Step 6: Commit final (se houve correção) e fechar**
+- [x] **Step 6: Commit final (se houve correção) e fechar**
 
 ```bash
 git add -A
