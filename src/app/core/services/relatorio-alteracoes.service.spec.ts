@@ -22,6 +22,7 @@ function baseInput(over: Partial<RelatorioAlteracoesInput> = {}): RelatorioAlter
     roster: [
       { escalaMensalId: 'e1', guarnicaoId: 'g1', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '06:00:00', horarioFim: '18:00:00', statusEfetivo: 'FALTA', detalhe: null, detalheId: 'f1', substituindoMatricula: null },
       { escalaMensalId: 'e2', guarnicaoId: 'g2', policialMatricula: '222-2', funcao: 'CMT', horarioInicio: '06:00:00', horarioFim: '18:00:00', statusEfetivo: 'SUBSTITUIDO', detalhe: 'Substituído por 111-1', detalheId: 'p1', substituindoMatricula: null },
+      { escalaMensalId: 'e3', guarnicaoId: 'g3', policialMatricula: '111-1', funcao: 'PAT', horarioInicio: '06:00:00', horarioFim: '14:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, substituindoMatricula: null },
     ],
     alteracoes: [
       { id: 'a1', data: '2026-08-12', tipo: 'CURSO', policialMatricula: '222-2', policialSubstitutoMatricula: null, guarnicaoId: 'g2', escalaMensalId: 'e2', horarioInicio: '06:00:00', horarioFim: '18:00:00', processoSei: '44900123', observacao: 'CFSD' },
@@ -69,5 +70,40 @@ describe('montarRelatorioAlteracoesHtml', () => {
   it('escapa HTML nos nomes', () => {
     const html = montarRelatorioAlteracoesHtml(baseInput());
     expect(html).not.toContain('BRAVO & <X>');
+  });
+
+  it('conta guarnições no TOTAL DE LANÇAMENTOS (GT\'S = 2, MO\'S = 1)', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput());
+    const secao = html.slice(html.indexOf('TOTAL DE LANÇAMENTOS'));
+    expect(secao).toMatch(/GT'S<\/td>\s*<td[^>]*>2<\/td>/);
+    expect(secao).toMatch(/MO'S<\/td>\s*<td[^>]*>1<\/td>/);
+  });
+
+  it('conta SERVIÇO EM GERAL a partir do roster (FALTAS = 1, PERMUTAS = 1)', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput());
+    const secao = html.slice(html.indexOf('SERVIÇO EM GERAL'));
+    expect(secao).toMatch(/FALTAS<\/td>\s*<td[^>]*>1<\/td>/);
+    expect(secao).toMatch(/PERMUTAS<\/td>\s*<td[^>]*>1<\/td>/);
+  });
+
+  it('inclui a lista fixa OS_PERMANENTES (1358/2025 e 948)', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput());
+    const secao = html.slice(html.indexOf('"O.S" CUMPRIDAS'));
+    expect(secao).toContain('1358/2025');
+    expect(secao).toContain('OPERAÇÃO TRANSPORTE SEGURO');
+    expect(OS_PERMANENTES).toHaveLength(20);
+  });
+
+  it('inclui o quadro fixo SUBSTITUIÇÃO DE PATRIMÔNIOS DE VIATURAS', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput());
+    const secao = html.slice(html.indexOf('SUBSTITUIÇÃO DE PATRIMÔNIOS'));
+    expect(secao).toContain('GT 16300');
+    expect(secao).toContain('710268');
+  });
+
+  it('inclui os quadros pré-montados PJES / DIÁRIA e POG A PÉ', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput());
+    expect(html).toContain('PJES / DIÁRIA');
+    expect(html).toContain('POG A PÉ');
   });
 });

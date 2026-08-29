@@ -59,11 +59,68 @@ const S_TH = S_CEL + 'background-color:#e6e6e6;font-weight:bold;text-align:cente
 const S_TITULO = 'font-family:Calibri,Arial,sans-serif;font-size:12pt;font-weight:bold;text-transform:uppercase;text-align:center;margin:12pt 0 4pt;';
 const S_PARAGRAFO = 'font-family:Calibri,Arial,sans-serif;font-size:12pt;text-align:justify;margin:4pt 0;';
 
-/** Ordens de serviço permanentes do 16º BPM (preenchidas em tarefas posteriores). */
-export const OS_PERMANENTES: { numero: string; modalidade: string }[] = [];
+/** Substituições de patrimônio de viaturas previstas (quadro fixo do 16º BPM). */
+export const SUBSTITUICAO_PATRIMONIOS: { gt: string; patrimonio: string; horario: string }[] = [
+  { gt: 'GT 16300', patrimonio: '710268', horario: '05h às 14h / 14h às 23h' },
+  { gt: 'GT 16000', patrimonio: '710265', horario: '06h às 18h / 18h às 06h' },
+  { gt: 'GT 16111', patrimonio: '710279', horario: '06h às 18h' },
+  { gt: 'GT 16111', patrimonio: '710268', horario: '18h às 06h' },
+  { gt: 'GT 16113', patrimonio: '710274', horario: '19h às 07h' },
+  { gt: 'GG 16450', patrimonio: '710265', horario: '06h às 06h' },
+  { gt: 'GG 16550', patrimonio: '710269', horario: '06h às 06h' },
+  { gt: 'CR 16750', patrimonio: '710271', horario: '06h às 06h' },
+  { gt: 'GT 16224', patrimonio: '710270', horario: '08h às 20h' },
+  { gt: 'GT 16250', patrimonio: '710272', horario: '13h à 01h' },
+  { gt: 'GT 16350', patrimonio: '710280', horario: '13h à 01h' },
+  { gt: 'GV 16112', patrimonio: 'SNR 7E44', horario: '14h às 02h' },
+  { gt: 'MP 16150', patrimonio: '71210', horario: '06h às 14h' },
+  { gt: 'MO 16334', patrimonio: '710255', horario: '06h às 14h' },
+  { gt: 'MO 16335', patrimonio: '710258', horario: '06h às 14h' },
+  { gt: 'MO 16336', patrimonio: '710260', horario: '06h às 14h' },
+  { gt: 'MO 16131', patrimonio: '710246', horario: '14h às 22h' },
+  { gt: 'MO 16132', patrimonio: '710248', horario: '14h às 22h' },
+  { gt: 'MO 16133', patrimonio: '710249', horario: '14h às 22h' },
+  { gt: 'MO 16221', patrimonio: '710246', horario: '15h às 23h' },
+  { gt: 'MO 16222', patrimonio: '710248', horario: '15h às 23h' },
+  { gt: 'MO 16223', patrimonio: '710250', horario: '15h às 23h' },
+  { gt: 'MO 16331', patrimonio: '710249', horario: '15h às 23h' },
+  { gt: 'MO 16332', patrimonio: '710250', horario: '15h às 23h' },
+  { gt: 'MO 16333', patrimonio: '710260', horario: '15h às 23h' },
+  { gt: 'GT 16231', patrimonio: '710XXX', horario: '06h às 18h' },
+  { gt: 'GT 16331', patrimonio: '710278', horario: '06h às 18h' },
+  { gt: 'GT 16332', patrimonio: '710286', horario: '06h às 18h' },
+  { gt: 'GT 16232', patrimonio: '710XXX', horario: '07h às 19h' },
+  { gt: 'GT 16332', patrimonio: '710273', horario: '17h às 05h' },
+  { gt: 'GT 16231', patrimonio: '710XXX', horario: '18h às 06h' },
+  { gt: 'GT 16232', patrimonio: '710XXX', horario: '19h às 07h' },
+  { gt: 'GT 16233', patrimonio: '710284', horario: '20h às 08h' },
+  { gt: 'GT 16333', patrimonio: '710276', horario: '20h às 08h' },
+  { gt: 'GT 16510', patrimonio: '710XXX', horario: '16h às 00h' },
+];
 
-/** Substituições de patrimônio previstas (preenchidas em tarefas posteriores). */
-export const SUBSTITUICAO_PATRIMONIOS: { gt: string; patrimonio: string; horario: string }[] = [];
+/** Ordens de serviço permanentes do 16º BPM (lista fixa "O.S" cumpridas). */
+export const OS_PERMANENTES: { numero: string; modalidade: string }[] = [
+  { numero: 'OS Nº 1358/2025 – INT. POLICIAMENTO NOS TI DE JOANA BEZERRA, RECIFE E CAIS DE SANTA RITA – 31 DE OUTUBRO ATÉ ULTERIOR DELIBERAÇÃO', modalidade: 'GG 16450 / GG 16550' },
+  { numero: 'OS Nº 1601/2025 - PBAC NO LOCAL EM FRENTE AO CTT – CENTRO DE TREINAMENTO TÁTICO PMPE – 18 DE DEZEMBRO A ULTERIOR DELIBERAÇÃO', modalidade: '01 PB/GT DISPONÍVEL' },
+  { numero: 'OS Nº 28 - INT. POLICIAMENTO NOS BAIRROS DA BOA VISTA, ILHA DO LEITE, SÃO JOSÉ E SANTO ANTÔNIO – 13 DE JANEIRO ATÉ ULTERIOR DELIBERAÇÃO', modalidade: 'GT 16416' },
+  { numero: 'OS Nº 160/2026 - Operação Impacto Integrado – Frei Caneca', modalidade: 'GT 16000 + 02 GTs OPS' },
+  { numero: 'OS Nº 300 - INT.POL. EDF 13 DE MAIO/BOA VISTA - 24H', modalidade: '01 GT/PB EM RONDAS' },
+  { numero: 'OS Nº 302 - INT.POL. NA PRAÇA SERGIO LORETO - 24H', modalidade: '01 GT/PB EM RONDAS' },
+  { numero: 'OS 307 – OPERAÇÃO OCTOPUS - A PARTIR DE MARÇO DE 2026 ATÉ ULTERIOR DELIBERAÇÃO - 13H ÀS 21H', modalidade: 'GT 16000 + 01 GT DISPONÍVEL' },
+  { numero: 'OS Nº 311 - INT.POL. NO CONSULADO GERAL DOS ESTADOS UNIDOS DA AMÉRICA - 03 DE MARÇO ATÉ ULTERIOR DELIBERAÇÃO - 24H', modalidade: 'GT 16000 + 01 GT DISPONÍVEL' },
+  { numero: 'OS Nº 383/2026 – POLICIAMENTO PRAÇA ODÍLIA FREIRE', modalidade: 'PB ou 01 GT disponível' },
+  { numero: 'OS Nº 441 – PROMOTORIAS (PAULO CAVALCANTI)', modalidade: 'RONDAS + PB (15min/hora)' },
+  { numero: 'OS Nº 846 - INTENSIFICAÇÃO DO POLICIAMENTO PRAÇA DOM VITAL - 08 a 31JUL26', modalidade: 'CICLOPATRULHA - PEs do 01 ao 20 min de cada hora / 01 MO DISPONÍVEL - PEs do 20 ao 40 min de cada hora' },
+  { numero: 'OS Nº 853 - INT. DO POLICIAMENTO NA RUA INCONFIDÊNCIA (JOANA BEZERRA) - DE 07 DE JULHO A 07 DE AGOSTO DE 2026', modalidade: 'PB JOANA BEZERRA / rondas no setor de origem com paradas de 10 minutos a cada duas horas na rua citada' },
+  { numero: 'OS Nº 854 - INT. DO POLICIAMENTO NAS PROXIMIDADES DA DROGASIL (ILHA DO LEITE) - DE 07 DE JULHO A 07 DE AGOSTO DE 2026', modalidade: 'PB ILHA DO LEITE / rondas no setor de origem e abordagens a indivíduos em atitudes suspeitas na proximidade do local' },
+  { numero: 'OS Nº 855 - INT. DO POLICIAMENTO NAS PROXIMIDADES DA CASA DA CULTURA - DE 07 DE JULHO A 07 DE AGOSTO DE 2026', modalidade: 'GT DISPONÍVEL OU PB SÃO JOSÉ / POG 25 RUA FLORIANO PEIXOTO (DA CASA DA CULTURA ATÉ TI DO RECIFE)' },
+  { numero: 'OS Nº 887 - APOIO A CAMIL - AGENDA INSTITUCIONAL RELATIVO AO GOVERNO DO ESTADO DE PE - 13JUL2026 ATÉ ULTERIOR', modalidade: '01 GT DISPONÍVEL - permanecer no local até liberação pelo Responsável' },
+  { numero: 'OS Nº 905 - APOIO A CAMIL - AGENDA INSTITUCIONAL RELATIVO AO GOVERNO DO ESTADO DE PE - 20JUL2026 ATÉ ULTERIOR DELIBERAÇÃO', modalidade: '01 GT DISPONÍVEL - permanecer no local até liberação pelo Responsável' },
+  { numero: 'OS Nº 946 - PALÁCIO JOAQUIM NABUCO - 28JUL26 a 31AGO26', modalidade: 'GT 16000 / GT DISPONÍVEL / MO 16331 / CICLO PATRULHA (BOA VISTA)' },
+  { numero: 'OS Nº 948 - OPERAÇÃO TRANSPORTE SEGURO (OTS) - AGOSTO 2026', modalidade: 'GT 16250 / GT 16350' },
+  { numero: 'OS Nº 1046 - OPERAÇÃO OCTHOPUS', modalidade: 'MO 16131' },
+  { numero: 'OS Nº 1077 - OPERAÇÃO FORÇA TOTAL', modalidade: 'GT 16550' },
+];
 
 const ROTULO_ALTERACAO: Record<TipoAlteracao, string> = {
   PERMUTA: 'PERMUTA',
@@ -159,6 +216,105 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
       linhasEfetivo,
     ),
   );
+
+  // 6. ALTERAÇÕES OPERAÇÃO PATRULHA / REMANEJAMENTOS (pré-montado) ----
+  for (const titulo of ['POG A PÉ', 'CICLOPATRULHA', 'PBS']) {
+    out.push(`<p style="${S_TITULO}">${titulo}</p>`);
+    out.push(
+      tabela(
+        ['SETOR', 'HORÁRIO', 'EFETIVO', 'OBS'],
+        [['', '', '', '']],
+      ),
+    );
+  }
+
+  // 7. SUBSTITUIÇÃO DE PATRIMÔNIOS DE VIATURAS (pré-montado fixo) -----
+  out.push(`<p style="${S_TITULO}">SUBSTITUIÇÃO DE PATRIMÔNIOS DE VIATURAS</p>`);
+  out.push(
+    tabela(
+      ['GT', 'PATRI. INICIAL', 'HORÁRIO', 'PATRI. SUBSTITUTO', 'HORÁRIO', 'MOTIVO'],
+      SUBSTITUICAO_PATRIMONIOS.map((p) => [esc(p.gt), esc(p.patrimonio), esc(p.horario), '', '', '']),
+    ),
+  );
+
+  // 8. ORDINÁRIO — TOTAL DE LANÇAMENTOS (auto) ----------------------
+  const contaTipo = (t: string): number =>
+    new Set(
+      input.roster
+        .filter((r) => guarnicaoPorId.get(r.guarnicaoId)?.tipo === t)
+        .map((r) => `${r.guarnicaoId}__${r.horarioInicio}`),
+    ).size;
+  const porStatus = (s: RosterRow['statusEfetivo']): number =>
+    input.roster.filter((r) => r.statusEfetivo === s).length;
+
+  const totalLanc: [string, number | string][] = [
+    ["GS'S", contaTipo('GT_ORDINARIO')],
+    ["GT'S", contaTipo('GT_TATICO')],
+    ["PB'S", 0],
+    ['GV', contaTipo('GV')],
+    ["MO'S", contaTipo('MO')],
+    ['CP', contaTipo('CP')],
+    ['CR', contaTipo('CR')],
+    ['GG', contaTipo('GG')],
+    ['MP', 0],
+    ['POG A PE NO TERRENO - 03 TURNOS', ''],
+  ];
+  const servicoGeral: [string, number | string][] = [
+    ['FALTAS', porStatus('FALTA')],
+    ['LTS / DTS', porStatus('LICENCA')],
+    ['PERMUTAS', porStatus('SUBSTITUIDO')],
+    ['AUSÊNCIA DO SERVIÇO', porStatus('AUSENCIA')],
+    ['FOLGAS (TÁTICO/MO/GT/PB/CICLO)', porStatus('FOLGA')],
+    ['LICENÇA PATERNIDADE', ''],
+    ['REMANEJAMENTO GT/MO/PB - ORDINÁRIA', porStatus('REMANEJADO')],
+    ["VT'S/MO'S/DESATIVADAS", input.baixas.length],
+    ['VIATURA/MO FORA DA ÁREA EM MISSÃO', ''],
+    ['QUANTIDADE DE "OS" CUMPRIDA', 0],
+  ];
+  out.push(`<p style="${S_TITULO}">ORDINÁRIO</p>`);
+  const n = Math.max(totalLanc.length, servicoGeral.length);
+  const corpo: string[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = totalLanc[i];
+    const b = servicoGeral[i];
+    corpo.push(
+      `<tr>` +
+        `<td style="${S_CEL_C}">${a ? esc(a[0]) : ''}</td>` +
+        `<td style="${S_CEL_C}">${a ? esc(String(a[1])) : ''}</td>` +
+        `<td style="${S_CEL_C}">${b ? esc(b[0]) : ''}</td>` +
+        `<td style="${S_CEL_C}">${b ? esc(String(b[1])) : ''}</td>` +
+        `</tr>`,
+    );
+  }
+  out.push(
+    `<table style="${S_TABELA}"><thead><tr>` +
+      `<th style="${S_TH}" colspan="2">TOTAL DE LANÇAMENTOS</th>` +
+      `<th style="${S_TH}" colspan="2">SERVIÇO EM GERAL</th>` +
+      `</tr></thead><tbody>${corpo.join('')}</tbody></table>`,
+  );
+
+  // 10. PJES / DIÁRIA (pré-montado vazio) --------------------------
+  out.push(`<p style="${S_TITULO}">PJES / DIÁRIA</p>`);
+  out.push(
+    tabela(
+      ['TOTAL DE LANÇAMENTOS', '', 'SERVIÇO EM GERAL', ''],
+      [['', '', '', '']],
+    ),
+  );
+
+  // 11. "O.S" CUMPRIDAS (lista fixa) ------------------------------
+  out.push(`<p style="${S_TITULO}">"O.S" CUMPRIDAS</p>`);
+  out.push(
+    tabela(
+      ['QNT', 'Nº DA O.S', 'MODALIDADE DE POLICIAMENTO'],
+      OS_PERMANENTES.map((o, i) => [String(i + 1), esc(o.numero), esc(o.modalidade)]),
+    ),
+  );
+
+  // 9./12. OBSERVAÇÕES + assinatura -----------------------------
+  out.push(`<p style="${S_TITULO}">OBSERVAÇÕES</p>`);
+  out.push(`<p style="${S_PARAGRAFO}">${esc(input.complementos.ALT_OBSERVACOES) || '-'}</p>`);
+  out.push(`<p style="${S_PARAGRAFO}text-align:center;font-weight:bold;">${esc(input.complementos.ALT_GRAD_MONITORAMENTO)}<br>GRADUADO DE MONITORAMENTO</p>`);
 
   return out.join('\n');
 }
