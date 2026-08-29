@@ -149,11 +149,8 @@ export class PainelPcPage {
   readonly formSubstitutoMatricula = signal('');
   readonly formMotivo = signal('');
   readonly formSeiNumero = signal('');
-  readonly formAutorizacao = signal('');
   readonly formDestino = signal('');
   readonly formHorarioChegada = signal('');
-  readonly formLicencaInicio = signal('');
-  readonly formLicencaFim = signal('');
   readonly formObservacao = signal('');
   readonly formProcessoSei = signal('');
   readonly registrando = signal(false);
@@ -548,11 +545,8 @@ export class PainelPcPage {
     this.formSeiNumero.set('');
     this.formProcessoSei.set('');
     this.formObservacao.set('');
-    this.formAutorizacao.set('');
     this.formDestino.set('');
     this.formHorarioChegada.set('');
-    this.formLicencaInicio.set(this.data());
-    this.formLicencaFim.set(this.data());
   }
 
   fecharModal(): void {
@@ -668,6 +662,18 @@ export class PainelPcPage {
       await this.reloadRoster();
     } catch {
       this.errorMessage.set('Não foi possível desfazer a LTS/DTS.');
+    }
+  }
+
+  async removerAlteracaoDoCard(row: RosterRow): Promise<void> {
+    if (!this.podeEditar() || !row.detalheId) return;
+    const tiposAlteracao: StatusEfetivo[] = ['SUBSTITUIDO', 'CURSO', 'DISPENSA', 'EXPEDIENTE', 'FOLGA', 'AUSENCIA', 'LICENCA'];
+    if (!tiposAlteracao.includes(row.statusEfetivo)) return;
+    try {
+      await this.lancamentoService.removerAlteracao(row.detalheId);
+      await this.reloadRoster();
+    } catch {
+      this.errorMessage.set('Não foi possível remover a alteração.');
     }
   }
 

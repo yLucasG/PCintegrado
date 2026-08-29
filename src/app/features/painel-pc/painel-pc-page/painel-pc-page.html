@@ -186,12 +186,41 @@
                         </span>
                       </button>
 
-                      <span
-                        class="rounded px-2 py-0.5 text-xs font-medium"
-                        [ngClass]="statusBadgeClasses(linha.statusEfetivo)"
-                      >
-                        {{ statusLabel(linha.statusEfetivo) }}
-                      </span>
+                      <div class="flex items-center gap-1">
+                        @if (linha.substituindoMatricula) {
+                          <span
+                            class="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                          >
+                            Substituindo {{ policialNome(linha.substituindoMatricula) }}
+                          </span>
+                        }
+                        <span
+                          class="rounded px-2 py-0.5 text-xs font-medium"
+                          [ngClass]="statusBadgeClasses(linha.statusEfetivo)"
+                        >
+                          {{ statusLabel(linha.statusEfetivo) }}
+                        </span>
+                        @if (
+                          podeEditar() &&
+                          linha.detalheId &&
+                          (linha.statusEfetivo === 'SUBSTITUIDO' ||
+                            linha.statusEfetivo === 'CURSO' ||
+                            linha.statusEfetivo === 'DISPENSA' ||
+                            linha.statusEfetivo === 'EXPEDIENTE' ||
+                            linha.statusEfetivo === 'FOLGA' ||
+                            linha.statusEfetivo === 'AUSENCIA' ||
+                            linha.statusEfetivo === 'LICENCA')
+                        ) {
+                          <button
+                            type="button"
+                            class="ml-1 text-xs text-slate-400 hover:text-red-600"
+                            (click)="removerAlteracaoDoCard(linha)"
+                            aria-label="Remover alteração"
+                          >
+                            ✕
+                          </button>
+                        }
+                      </div>
                     </div>
 
                     @if (
