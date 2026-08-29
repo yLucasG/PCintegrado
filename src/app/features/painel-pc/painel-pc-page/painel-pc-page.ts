@@ -561,9 +561,9 @@ export class PainelPcPage {
     }
     this.registrando.set(true);
     this.errorMessage.set(null);
+    const data = this.data();
+    const tipo = this.tipoLancamento();
     try {
-      const data = this.data();
-      const tipo = this.tipoLancamento();
       if (tipo === 'ATRASADO') {
         await this.lancamentoService.registrarAtraso({
           data,
@@ -597,7 +597,11 @@ export class PainelPcPage {
       this.fecharModal();
       await this.reloadRoster();
     } catch {
-      this.errorMessage.set('Não foi possível registrar a alteração.');
+      this.errorMessage.set(
+        tipo === 'ATRASADO' || tipo === 'REMANEJAMENTO'
+          ? 'Não foi possível registrar a alteração.'
+          : 'Não foi possível registrar — talvez já exista uma alteração para este policial hoje.',
+      );
     } finally {
       this.registrando.set(false);
     }
@@ -666,7 +670,7 @@ export class PainelPcPage {
   }
 
   async removerAlteracaoDoCard(row: RosterRow): Promise<void> {
-    if (!this.podeEditar() || !row.detalheId) return;
+    if (!this.podeEditar() || !row.detalheId || row.detalheOrigem !== 'ALTERACAO') return;
     const tiposAlteracao: StatusEfetivo[] = ['SUBSTITUIDO', 'CURSO', 'DISPENSA', 'EXPEDIENTE', 'FOLGA', 'AUSENCIA', 'LICENCA'];
     if (!tiposAlteracao.includes(row.statusEfetivo)) return;
     try {

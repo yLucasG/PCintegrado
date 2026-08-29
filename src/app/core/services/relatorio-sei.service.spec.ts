@@ -58,14 +58,14 @@ describe('montarRelatorioHtml', () => {
       ],
       roster: [
         // g1: início 05h → 1ª chamada diurna
-        { escalaMensalId: 'e1', guarnicaoId: 'g1', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '05:00:00', horarioFim: '17:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, substituindoMatricula: null },
-        { escalaMensalId: 'e2', guarnicaoId: 'g1', policialMatricula: '222-2', funcao: 'MOT', horarioInicio: '05:00:00', horarioFim: '17:00:00', statusEfetivo: 'FALTA', detalhe: 'Atestado médico', detalheId: 'f1', substituindoMatricula: null },
+        { escalaMensalId: 'e1', guarnicaoId: 'g1', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '05:00:00', horarioFim: '17:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, detalheOrigem: null, substituindoMatricula: null },
+        { escalaMensalId: 'e2', guarnicaoId: 'g1', policialMatricula: '222-2', funcao: 'MOT', horarioInicio: '05:00:00', horarioFim: '17:00:00', statusEfetivo: 'FALTA', detalhe: 'Atestado médico', detalheId: 'f1', detalheOrigem: 'LEGADO', substituindoMatricula: null },
         // g2: início 06h → 2ª chamada diurna
-        { escalaMensalId: 'e3', guarnicaoId: 'g2', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '06:00:00', horarioFim: '18:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, substituindoMatricula: null },
+        { escalaMensalId: 'e3', guarnicaoId: 'g2', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '06:00:00', horarioFim: '18:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, detalheOrigem: null, substituindoMatricula: null },
         // g4: início 13h → lançamento complementar (diurno)
-        { escalaMensalId: 'e4', guarnicaoId: 'g4', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '13:00:00', horarioFim: '21:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, substituindoMatricula: null },
+        { escalaMensalId: 'e4', guarnicaoId: 'g4', policialMatricula: '111-1', funcao: 'CMT', horarioInicio: '13:00:00', horarioFim: '21:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, detalheOrigem: null, substituindoMatricula: null },
         // g3: início 20h → só aparece no turno noturno
-        { escalaMensalId: 'e5', guarnicaoId: 'g3', policialMatricula: '222-2', funcao: 'CMT', horarioInicio: '20:00:00', horarioFim: '08:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, substituindoMatricula: null },
+        { escalaMensalId: 'e5', guarnicaoId: 'g3', policialMatricula: '222-2', funcao: 'CMT', horarioInicio: '20:00:00', horarioFim: '08:00:00', statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null, detalheOrigem: null, substituindoMatricula: null },
       ],
       baixas: [],
       osRows: [

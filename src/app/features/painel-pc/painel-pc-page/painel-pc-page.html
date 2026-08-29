@@ -203,6 +203,7 @@
                         @if (
                           podeEditar() &&
                           linha.detalheId &&
+                          linha.detalheOrigem === 'ALTERACAO' &&
                           (linha.statusEfetivo === 'SUBSTITUIDO' ||
                             linha.statusEfetivo === 'CURSO' ||
                             linha.statusEfetivo === 'DISPENSA' ||
@@ -225,6 +226,7 @@
 
                     @if (
                       podeEditar() &&
+                      !linha.substituindoMatricula &&
                       (linha.statusEfetivo === 'PREVISTO' ||
                         linha.statusEfetivo === 'FALTA' ||
                         linha.statusEfetivo === 'ATRASADO')
@@ -270,7 +272,7 @@
                         </button>
                       </div>
                     }
-                    @if (podeEditar() && linha.statusEfetivo === 'LICENCA') {
+                    @if (podeEditar() && linha.statusEfetivo === 'LICENCA' && linha.detalheOrigem === 'LEGADO') {
                       <div class="mt-1">
                         <button
                           type="button"

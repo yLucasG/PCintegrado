@@ -42,6 +42,9 @@ export interface RosterRow {
   statusEfetivo: StatusEfetivo;
   detalhe: string | null;
   detalheId: string | null;
+  /** Onde vive `detalheId`: `lancamento_alteracoes` (`ALTERACAO`), uma tabela
+   * legada de desvio (`LEGADO`), ou nenhuma (`null`). */
+  detalheOrigem: 'ALTERACAO' | 'LEGADO' | null;
   substituindoMatricula: string | null;
 }
 
@@ -240,7 +243,12 @@ export class LancamentoService {
       data_fim: string;
     }[];
 
-    const alteracoes = await this.listAlteracoesDoDia(data);
+    let alteracoes: AlteracaoRow[] = [];
+    try {
+      alteracoes = await this.listAlteracoesDoDia(data);
+    } catch {
+      alteracoes = [];
+    }
 
     const linhas = roster.map((row): RosterRow => {
       const base = {
@@ -250,6 +258,7 @@ export class LancamentoService {
         funcao: row.funcao,
         horarioInicio: row.horario_inicio,
         horarioFim: row.horario_fim,
+        detalheOrigem: null as 'ALTERACAO' | 'LEGADO' | null,
         substituindoMatricula: null as string | null,
       };
 
@@ -260,10 +269,15 @@ export class LancamentoService {
           statusEfetivo: 'LICENCA',
           detalhe: `${licenca.data_inicio} a ${licenca.data_fim}`,
           detalheId: licenca.id,
+          detalheOrigem: 'LEGADO',
         };
       }
 
-      const alteracao = alteracoes.find((a) => a.policialMatricula === row.policial_matricula);
+      const alteracao = alteracoes.find(
+        (a) =>
+          a.policialMatricula === row.policial_matricula &&
+          (a.guarnicaoId == null || a.guarnicaoId === row.guarnicao_id),
+      );
       if (alteracao) {
         const mapa: Record<TipoAlteracao, StatusEfetivo> = {
           PERMUTA: 'SUBSTITUIDO',
@@ -280,6 +294,7 @@ export class LancamentoService {
             statusEfetivo: 'SUBSTITUIDO',
             detalhe: `Substituído por ${alteracao.policialSubstitutoMatricula}`,
             detalheId: alteracao.id,
+            detalheOrigem: 'ALTERACAO',
           };
         }
         return {
@@ -287,17 +302,18 @@ export class LancamentoService {
           statusEfetivo: mapa[alteracao.tipo],
           detalhe: alteracao.observacao,
           detalheId: alteracao.id,
+          detalheOrigem: 'ALTERACAO',
         };
       }
 
       const falta = faltas.find((f) => f.policial_matricula === row.policial_matricula);
       if (falta) {
-        return { ...base, statusEfetivo: 'FALTA', detalhe: falta.motivo, detalheId: falta.id };
+        return { ...base, statusEfetivo: 'FALTA', detalhe: falta.motivo, detalheId: falta.id, detalheOrigem: 'LEGADO' };
       }
 
       const atraso = atrasos.find((a) => a.policial_matricula === row.policial_matricula);
       if (atraso) {
-        return { ...base, statusEfetivo: 'ATRASADO', detalhe: atraso.motivo, detalheId: atraso.id };
+        return { ...base, statusEfetivo: 'ATRASADO', detalhe: atraso.motivo, detalheId: atraso.id, detalheOrigem: 'LEGADO' };
       }
 
       const permuta = permutas.find((p) => p.policial_substituido_matricula === row.policial_matricula);
@@ -322,6 +338,7 @@ export class LancamentoService {
           statusEfetivo: 'REMANEJADO',
           detalhe: remanejamento.destino,
           detalheId: remanejamento.id,
+          detalheOrigem: 'LEGADO',
         };
       }
 
@@ -331,18 +348,23 @@ export class LancamentoService {
     const sinteticas: RosterRow[] = [];
     for (const alteracao of alteracoes) {
       if (alteracao.tipo !== 'PERMUTA' || !alteracao.policialSubstitutoMatricula) continue;
-      const original = roster.find((r) => r.policial_matricula === alteracao.policialMatricula);
+      const original = roster.find(
+        (r) =>
+          r.policial_matricula === alteracao.policialMatricula &&
+          (alteracao.guarnicaoId == null || r.guarnicao_id === alteracao.guarnicaoId),
+      );
       if (!original) continue;
       sinteticas.push({
-        escalaMensalId: original.id,
-        guarnicaoId: original.guarnicao_id,
+        escalaMensalId: alteracao.escalaMensalId ?? original.id,
+        guarnicaoId: alteracao.guarnicaoId ?? original.guarnicao_id,
         policialMatricula: alteracao.policialSubstitutoMatricula,
         funcao: original.funcao,
-        horarioInicio: original.horario_inicio,
-        horarioFim: original.horario_fim,
+        horarioInicio: alteracao.horarioInicio ?? original.horario_inicio,
+        horarioFim: alteracao.horarioFim ?? original.horario_fim,
         statusEfetivo: 'PREVISTO',
         detalhe: `Substituindo ${alteracao.policialMatricula}`,
         detalheId: null,
+        detalheOrigem: null,
         substituindoMatricula: alteracao.policialMatricula,
       });
     }

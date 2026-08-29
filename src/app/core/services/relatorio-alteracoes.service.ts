@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { GuarnicaoRow } from './guarnicoes.service';
+import { GuarnicaoRow, TipoGuarnicao } from './guarnicoes.service';
 import { PolicialRow } from './policiais.service';
 import { AlteracaoRow, BaixaRow, RosterRow, TipoAlteracao } from './lancamento.service';
 
@@ -132,6 +132,42 @@ const ROTULO_ALTERACAO: Record<TipoAlteracao, string> = {
   AUSENCIA_SERVICO: 'AUSÊNCIA DO SERVIÇO',
 };
 
+// Rótulos do quadro PJES / DIÁRIA — duplicados verbatim de PJES_TOTAL / PJES_SERVICO
+// em relatorio-sei.service.ts (Ruling 1 sanciona a duplicação).
+const PJES_TOTAL_ALT = [
+  "GS'S EXTRA",
+  "GP'S",
+  'GTS EXTRA',
+  'GV EXTRA',
+  'VC',
+  "MO'S EXTRA",
+  'CP EXTRA',
+  'GG EXTRA',
+  'POG TI',
+  'POG (COLOCAR OPERAÇÃO, PE SEGURO, CERNE, PAPAI NOEL, TEC...)',
+];
+
+const PJES_SERVICO_ALT = [
+  'FALTAS',
+  'LTS / DTS',
+  'PERMUTAS',
+  'FOLGAS',
+  'REMANEJAMENTO/SUBSTITUIÇÃO',
+  "VT'S/MO'S DESATIVADAS",
+  'POG T.I DESATIVADOS',
+  'POG (OUTRAS OPERAÇÕES) DESATIVADOS',
+  'VIATURA FORA DA ÁREA EM MISSÃO',
+  'QUANTIDADE DE "OS" CUMPRIDA',
+];
+
+const MESES_PT = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+
+function dataPorExtenso(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  return `${Number(m[3])} de ${MESES_PT[Number(m[2]) - 1]} de ${m[1]}`;
+}
+
 function esc(v: string | null | undefined): string {
   return (v ?? '')
     .replace(/&/g, '&amp;')
@@ -154,6 +190,29 @@ function tabela(cabecalhos: string[], linhas: string[][]): string {
   return `<table style="${S_TABELA}"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
 }
 
+/** Tabela 2 colunas (TOTAL DE LANÇAMENTOS | SERVIÇO EM GERAL) com valores em branco.
+ * Modelada em tabelaDuasColunas de relatorio-sei.service.ts. */
+function tabelaDuasColunas(esquerda: string[], direita: string[]): string {
+  const n = Math.max(esquerda.length, direita.length);
+  const linhas: string[] = [];
+  for (let i = 0; i < n; i++) {
+    linhas.push(
+      `<tr>` +
+        `<td style="${S_CEL_C}">${esquerda[i] ? esc(esquerda[i]) : ''}</td>` +
+        `<td style="${S_CEL_C}"></td>` +
+        `<td style="${S_CEL_C}">${direita[i] ? esc(direita[i]) : ''}</td>` +
+        `<td style="${S_CEL_C}"></td>` +
+        `</tr>`,
+    );
+  }
+  return (
+    `<table style="${S_TABELA}"><thead><tr>` +
+    `<th style="${S_TH}" colspan="2">TOTAL DE LANÇAMENTOS</th>` +
+    `<th style="${S_TH}" colspan="2">SERVIÇO EM GERAL</th>` +
+    `</tr></thead><tbody>${linhas.join('')}</tbody></table>`
+  );
+}
+
 export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): string {
   const guarnicaoPorId = new Map(input.guarnicoes.map((g) => [g.id, g]));
   const policialPorMatricula = new Map(input.policiais.map((p) => [p.matricula, p]));
@@ -168,14 +227,14 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
   out.push(`<p style="${S_TITULO}">16º BATALHÃO DE POLÍCIA MILITAR — BATALHÃO FREI CANECA</p>`);
   out.push(`<p style="${S_TITULO}">RELATÓRIO DE ALTERAÇÕES DO SERVIÇO</p>`);
   out.push(
-    `<p style="${S_PARAGRAFO}"><b>Data:</b> ${esc(input.data)} &nbsp;&nbsp; ` +
+    `<p style="${S_PARAGRAFO}"><b>Data:</b> ${esc(dataPorExtenso(input.data))} &nbsp;&nbsp; ` +
       `<b>Graduado de monitoramento:</b> ${esc(input.complementos.ALT_GRAD_MONITORAMENTO)}</p>`,
   );
 
   // 3. Parágrafo de abertura ------------------------------------------
   out.push(
     `<p style="${S_PARAGRAFO}">Segue o relatório das alterações do serviço ordinário referente ao dia ` +
-      `${esc(input.data)}, para conhecimento e providências.</p>`,
+      `${esc(dataPorExtenso(input.data))}, para conhecimento e providências.</p>`,
   );
 
   // 4. ESCALAS ------------------------------------------------------
@@ -223,7 +282,7 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
     out.push(
       tabela(
         ['SETOR', 'HORÁRIO', 'EFETIVO', 'OBS'],
-        [['', '', '', '']],
+        [['', '', '', ''], ['OBS:', '', '', '']],
       ),
     );
   }
@@ -238,11 +297,13 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
   );
 
   // 8. ORDINÁRIO — TOTAL DE LANÇAMENTOS (auto) ----------------------
-  const contaTipo = (t: string): number =>
+  const baixados = new Set(input.baixas.map((b) => `${b.guarnicaoId}__${b.horarioInicio}`));
+  const contaTipo = (t: TipoGuarnicao): number =>
     new Set(
       input.roster
         .filter((r) => guarnicaoPorId.get(r.guarnicaoId)?.tipo === t)
-        .map((r) => `${r.guarnicaoId}__${r.horarioInicio}`),
+        .map((r) => `${r.guarnicaoId}__${r.horarioInicio}`)
+        .filter((cardId) => !baixados.has(cardId)),
     ).size;
   const porStatus = (s: RosterRow['statusEfetivo']): number =>
     input.roster.filter((r) => r.statusEfetivo === s).length;
@@ -293,14 +354,9 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
       `</tr></thead><tbody>${corpo.join('')}</tbody></table>`,
   );
 
-  // 10. PJES / DIÁRIA (pré-montado vazio) --------------------------
+  // 10. PJES / DIÁRIA (pré-montado, preenchido à mão no SEI) -------
   out.push(`<p style="${S_TITULO}">PJES / DIÁRIA</p>`);
-  out.push(
-    tabela(
-      ['TOTAL DE LANÇAMENTOS', '', 'SERVIÇO EM GERAL', ''],
-      [['', '', '', '']],
-    ),
-  );
+  out.push(tabelaDuasColunas(PJES_TOTAL_ALT, PJES_SERVICO_ALT));
 
   // 11. "O.S" CUMPRIDAS (lista fixa) ------------------------------
   out.push(`<p style="${S_TITULO}">"O.S" CUMPRIDAS</p>`);
