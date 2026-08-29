@@ -429,3 +429,123 @@ asserções reais em specs de serviço / funções puras exportadas.
 
 Deploy da migração: fluxo sem Docker (parse estático + `db push`),
 conforme memória `supabase-no-docker.md`.
+
+---
+
+## Apêndice A — Conteúdo fixo extraído do PDF
+
+### A.1 ORDINÁRIO — rótulos das duas colunas (ordem do PDF)
+
+**TOTAL DE LANÇAMENTOS** (valor automático salvo indicação de manual):
+
+| Rótulo | Fonte |
+|---|---|
+| GS'S | contagem de guarnições ativas `tipo = GT_ORDINARIO` |
+| GT'S | contagem de guarnições ativas `tipo = GT_TATICO` |
+| PB'S | 0 (sem tipo correspondente — manual no SEI) |
+| GV | contagem `tipo = GV` |
+| MO'S | contagem `tipo = MO` |
+| CP | contagem `tipo = CP` |
+| CR | contagem `tipo = CR` |
+| GG | contagem `tipo = GG` |
+| MP | 0 (manual no SEI) |
+| POG A PE NO TERRENO - 03 TURNOS | 0 (manual no SEI) |
+
+**SERVIÇO EM GERAL** (automático a partir do `roster` por `statusEfetivo` + `baixas`):
+
+| Rótulo | Fonte |
+|---|---|
+| FALTAS | `roster` count `statusEfetivo === 'FALTA'` |
+| LTS / DTS | count `statusEfetivo === 'LICENCA'` (inclui `FALTA_LTS`) |
+| PERMUTAS | count `statusEfetivo === 'SUBSTITUIDO'` |
+| AUSÊNCIA DO SERVIÇO | count `statusEfetivo === 'AUSENCIA'` |
+| FOLGAS (TÁTICO/MO/GT/PB/CICLO) | count `statusEfetivo === 'FOLGA'` |
+| LICENÇA PATERNIDADE | 0 (manual no SEI) |
+| REMANEJAMENTO GT/MO/PB - ORDINÁRIA | count `statusEfetivo === 'REMANEJADO'` |
+| VT'S/MO'S/DESATIVADAS | `baixas.length` |
+| VIATURA/MO FORA DA ÁREA EM MISSÃO | 0 (manual no SEI) |
+| QUANTIDADE DE "OS" CUMPRIDA | 0 nesta fase (futura P3) |
+
+Os valores numéricos que aparecem no PDF (`GT'S 19`, `CP 13`, etc.) são
+do dia daquele relatório — servem só de exemplo, não são fixos.
+
+### A.2 `SUBSTITUICAO_PATRIMONIOS` — tabela-modelo fixa
+
+Colunas: `GT` · `PATRI. INICIAL` · `HORÁRIO` · `PATRI. SUBSTITUTO` (em
+branco) · `HORÁRIO` (em branco) · `MOTIVO` (em branco).
+
+```
+GT 16300 | 710268   | 05h às 14h / 14h às 23h
+GT 16000 | 710265   | 06h às 18h / 18h às 06h
+GT 16111 | 710279   | 06h às 18h
+GT 16111 | 710268   | 18h às 06h
+GT 16113 | 710274   | 19h às 07h
+GG 16450 | 710265   | 06h às 06h
+GG 16550 | 710269   | 06h às 06h
+CR 16750 | 710271   | 06h às 06h
+GT 16224 | 710270   | 08h às 20h
+GT 16250 | 710272   | 13h à 01h
+GT 16350 | 710280   | 13h à 01h
+GV 16112 | SNR 7E44 | 14h às 02h
+MP 16150 | 71210    | 06h às 14h
+MO 16334 | 710255   | 06h às 14h
+MO 16335 | 710258   | 06h às 14h
+MO 16336 | 710260   | 06h às 14h
+MO 16131 | 710246   | 14h às 22h
+MO 16132 | 710248   | 14h às 22h
+MO 16133 | 710249   | 14h às 22h
+MO 16221 | 710246   | 15h às 23h
+MO 16222 | 710248   | 15h às 23h
+MO 16223 | 710250   | 15h às 23h
+MO 16331 | 710249   | 15h às 23h
+MO 16332 | 710250   | 15h às 23h
+MO 16333 | 710260   | 15h às 23h
+GT 16231 | 710XXX   | 06h às 18h
+GT 16331 | 710278   | 06h às 18h
+GT 16332 | 710286   | 06h às 18h
+GT 16232 | 710XXX   | 07h às 19h
+GT 16332 | 710273   | 17h às 05h
+GT 16231 | 710XXX   | 18h às 06h
+GT 16232 | 710XXX   | 19h às 07h
+GT 16233 | 710284   | 20h às 08h
+GT 16333 | 710276   | 20h às 08h
+GT 16510 | 710XXX   | 16h às 00h
+```
+
+### A.3 `OS_PERMANENTES` — lista fixa "O.S" CUMPRIDAS
+
+Colunas: `QNT` (índice) · `Nº DA O.S` · `MODALIDADE DE POLICIAMENTO`
+(texto da coluna 3 do PDF — a atribuição-padrão; vira dinâmica na
+fase P3).
+
+```
+1  | OS Nº 1358/2025 – INT. POLICIAMENTO NOS TI DE JOANA BEZERRA, RECIFE E CAIS DE SANTA RITA – 31 DE OUTUBRO ATÉ ULTERIOR DELIBERAÇÃO | GG 16450 / GG 16550
+2  | OS Nº 1601/2025 - PBAC NO LOCAL EM FRENTE AO CTT – CENTRO DE TREINAMENTO TÁTICO PMPE – 18 DE DEZEMBRO A ULTERIOR DELIBERAÇÃO | 01 PB/GT DISPONÍVEL
+3  | OS Nº 28 - INT. POLICIAMENTO NOS BAIRROS DA BOA VISTA, ILHA DO LEITE, SÃO JOSÉ E SANTO ANTÔNIO – 13 DE JANEIRO ATÉ ULTERIOR DELIBERAÇÃO | GT 16416
+4  | OS Nº 160/2026 - Operação Impacto Integrado – Frei Caneca | GT 16000 + 02 GTs OPS
+5  | OS Nº 300 - INT.POL. EDF 13 DE MAIO/BOA VISTA - 24H | 01 GT/PB EM RONDAS
+6  | OS Nº 302 - INT.POL. NA PRAÇA SERGIO LORETO - 24H | 01 GT/PB EM RONDAS
+7  | OS 307 – OPERAÇÃO OCTOPUS - A PARTIR DE MARÇO DE 2026 ATÉ ULTERIOR DELIBERAÇÃO - 13H ÀS 21H | GT 16000 + 01 GT DISPONÍVEL
+8  | OS Nº 311 - INT.POL. NO CONSULADO GERAL DOS ESTADOS UNIDOS DA AMÉRICA - 03 DE MARÇO ATÉ ULTERIOR DELIBERAÇÃO - 24H | GT 16000 + 01 GT DISPONÍVEL
+9  | OS Nº 383/2026 – POLICIAMENTO PRAÇA ODÍLIA FREIRE | PB ou 01 GT disponível
+10 | OS Nº 441 – PROMOTORIAS (PAULO CAVALCANTI) | RONDAS + PB (15min/hora)
+11 | OS Nº 846 - INTENSIFICAÇÃO DO POLICIAMENTO PRAÇA DOM VITAL - 08 a 31JUL26 | CICLOPATRULHA - PEs do 01 ao 20 min de cada hora / 01 MO DISPONÍVEL - PEs do 20 ao 40 min de cada hora
+12 | OS Nº 853 - INT. DO POLICIAMENTO NA RUA INCONFIDÊNCIA (JOANA BEZERRA) - DE 07 DE JULHO A 07 DE AGOSTO DE 2026 | PB JOANA BEZERRA / rondas no setor de origem com paradas de 10 minutos a cada duas horas na rua citada
+13 | OS Nº 854 - INT. DO POLICIAMENTO NAS PROXIMIDADES DA DROGASIL (ILHA DO LEITE) - DE 07 DE JULHO A 07 DE AGOSTO DE 2026 | PB ILHA DO LEITE / rondas no setor de origem e abordagens a indivíduos em atitudes suspeitas na proximidade do local
+14 | OS Nº 855 - INT. DO POLICIAMENTO NAS PROXIMIDADES DA CASA DA CULTURA - DE 07 DE JULHO A 07 DE AGOSTO DE 2026 | GT DISPONÍVEL OU PB SÃO JOSÉ / POG 25 RUA FLORIANO PEIXOTO (DA CASA DA CULTURA ATÉ TI DO RECIFE)
+15 | OS Nº 887 - APOIO A CAMIL - AGENDA INSTITUCIONAL RELATIVO AO GOVERNO DO ESTADO DE PE - 13JUL2026 ATÉ ULTERIOR | 01 GT DISPONÍVEL - permanecer no local até liberação pelo Responsável
+16 | OS Nº 905 - APOIO A CAMIL - AGENDA INSTITUCIONAL RELATIVO AO GOVERNO DO ESTADO DE PE - 20JUL2026 ATÉ ULTERIOR DELIBERAÇÃO | 01 GT DISPONÍVEL - permanecer no local até liberação pelo Responsável
+17 | OS Nº 946 - PALÁCIO JOAQUIM NABUCO - 28JUL26 a 31AGO26 | GT 16000 / GT DISPONÍVEL / MO 16331 / CICLO PATRULHA (BOA VISTA)
+18 | OS Nº 948 - OPERAÇÃO TRANSPORTE SEGURO (OTS) - AGOSTO 2026 | GT 16250 / GT 16350
+19 | OS Nº 1046 - OPERAÇÃO OCTHOPUS | MO 16131
+20 | OS Nº 1077 - OPERAÇÃO FORÇA TOTAL | GT 16550
+```
+
+### A.4 Quadros pré-montados vazios
+
+- **PJES / DIÁRIA** — dois quadros (`TOTAL DE LANÇAMENTOS` |
+  `SERVIÇO EM GERAL`), reusar `PJES_TOTAL`/`PJES_SERVICO` do
+  `relatorio-sei.service.ts` como referência de rótulos, valores em
+  branco.
+- **POG A PÉ / CICLOPATRULHA / PBS** — três tabelas de cabeçalho
+  só, com uma linha "OBS:" em branco.
