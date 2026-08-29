@@ -14,6 +14,14 @@
       </label>
       <button
         type="button"
+        class="rounded border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 disabled:opacity-50 dark:border-slate-600 dark:text-slate-200"
+        [disabled]="loading()"
+        (click)="reload()"
+      >
+        {{ loading() ? 'Atualizando…' : 'Atualizar' }}
+      </button>
+      <button
+        type="button"
         class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white dark:bg-blue-500"
         (click)="copiarRelatorio()"
       >

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -97,6 +97,17 @@ export class RelatorioOriginalPage {
   async onDataChange(novaData: string): Promise<void> {
     this.data.set(novaData);
     await this.reload();
+  }
+
+  /**
+   * Recarrega quando o operador volta para esta aba do navegador — assim
+   * alterações feitas nos cards em outra aba/janela aparecem sem F5.
+   */
+  @HostListener('document:visibilitychange')
+  @HostListener('window:focus')
+  recarregarSeVisivel(): void {
+    if (this.loading() || document.visibilityState !== 'visible') return;
+    void this.reload();
   }
 
   updateComplemento(campo: CampoComplementoAlt, valor: string): void {
