@@ -95,6 +95,37 @@ export interface RegistrarLicencaInput {
   sei_numero?: string | null;
 }
 
+export type TipoAlteracao =
+  | 'PERMUTA' | 'CURSO' | 'DISPENSA' | 'EXPEDIENTE'
+  | 'FOLGA' | 'FALTA_LTS' | 'AUSENCIA_SERVICO';
+
+export interface AlteracaoRow {
+  id: string;
+  data: string;
+  tipo: TipoAlteracao;
+  policialMatricula: string;
+  policialSubstitutoMatricula: string | null;
+  guarnicaoId: string | null;
+  escalaMensalId: string | null;
+  horarioInicio: string | null;
+  horarioFim: string | null;
+  processoSei: string | null;
+  observacao: string | null;
+}
+
+export interface RegistrarAlteracaoInput {
+  data: string;
+  tipo: TipoAlteracao;
+  policial_matricula: string;
+  policial_substituto_matricula?: string | null;
+  guarnicao_id?: string | null;
+  escala_mensal_id?: string | null;
+  horario_inicio?: string | null;
+  horario_fim?: string | null;
+  processo_sei?: string | null;
+  observacao?: string | null;
+}
+
 export interface BaixaRow {
   id: string;
   guarnicaoId: string;
@@ -353,6 +384,62 @@ export class LancamentoService {
 
   async removerLicenca(id: string): Promise<void> {
     const { error } = await this.supabase.client.from('lancamento_licencas').delete().eq('id', id);
+    if (error) throw error;
+  }
+
+  async listAlteracoesDoDia(data: string): Promise<AlteracaoRow[]> {
+    const { data: rows, error } = await this.supabase.client
+      .from('lancamento_alteracoes')
+      .select('*')
+      .eq('data', data);
+    if (error) throw error;
+    return (
+      (rows ?? []) as {
+        id: string;
+        data: string;
+        tipo: TipoAlteracao;
+        policial_matricula: string;
+        policial_substituto_matricula: string | null;
+        guarnicao_id: string | null;
+        escala_mensal_id: string | null;
+        horario_inicio: string | null;
+        horario_fim: string | null;
+        processo_sei: string | null;
+        observacao: string | null;
+      }[]
+    ).map((r) => ({
+      id: r.id,
+      data: r.data,
+      tipo: r.tipo,
+      policialMatricula: r.policial_matricula,
+      policialSubstitutoMatricula: r.policial_substituto_matricula,
+      guarnicaoId: r.guarnicao_id,
+      escalaMensalId: r.escala_mensal_id,
+      horarioInicio: r.horario_inicio,
+      horarioFim: r.horario_fim,
+      processoSei: r.processo_sei,
+      observacao: r.observacao,
+    }));
+  }
+
+  async registrarAlteracao(input: RegistrarAlteracaoInput): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_alteracoes').insert({
+      data: input.data,
+      tipo: input.tipo,
+      policial_matricula: input.policial_matricula,
+      policial_substituto_matricula: input.policial_substituto_matricula ?? null,
+      guarnicao_id: input.guarnicao_id ?? null,
+      escala_mensal_id: input.escala_mensal_id ?? null,
+      horario_inicio: input.horario_inicio ?? null,
+      horario_fim: input.horario_fim ?? null,
+      processo_sei: input.processo_sei ?? null,
+      observacao: input.observacao ?? null,
+    });
+    if (error) throw error;
+  }
+
+  async removerAlteracao(id: string): Promise<void> {
+    const { error } = await this.supabase.client.from('lancamento_alteracoes').delete().eq('id', id);
     if (error) throw error;
   }
 

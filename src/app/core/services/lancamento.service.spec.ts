@@ -588,4 +588,96 @@ describe('LancamentoService', () => {
 
     expect(eqSpy).toHaveBeenCalledWith('id', 'ff1');
   });
+
+  it('registers an alteracao via insert on lancamento_alteracoes', async () => {
+    const insertSpy = vi.fn().mockResolvedValue({ error: null });
+    const supabaseStub = { client: { from: () => ({ insert: insertSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.registrarAlteracao({
+      data: '2026-08-04',
+      tipo: 'CURSO',
+      policial_matricula: '127934-3',
+      guarnicao_id: 'g1',
+      processo_sei: '44900123',
+      observacao: 'CFSD',
+    });
+
+    expect(insertSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: '2026-08-04',
+        tipo: 'CURSO',
+        policial_matricula: '127934-3',
+        guarnicao_id: 'g1',
+        processo_sei: '44900123',
+        observacao: 'CFSD',
+        policial_substituto_matricula: null,
+      }),
+    );
+  });
+
+  it('lists alteracoes for a given day, mapping snake_case to camelCase', async () => {
+    const rows = [
+      {
+        id: 'alt1',
+        data: '2026-08-04',
+        tipo: 'DISPENSA',
+        policial_matricula: '127934-3',
+        policial_substituto_matricula: null,
+        guarnicao_id: 'g1',
+        escala_mensal_id: 'em1',
+        horario_inicio: '06:00:00',
+        horario_fim: '18:00:00',
+        processo_sei: '44900999',
+        observacao: 'AUTORIZADO PELA CIA',
+      },
+    ];
+    const supabaseStub = {
+      client: {
+        from: () => ({ select: () => ({ eq: () => Promise.resolve({ data: rows, error: null }) }) }),
+      },
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listAlteracoesDoDia('2026-08-04');
+
+    expect(result).toEqual([
+      {
+        id: 'alt1',
+        data: '2026-08-04',
+        tipo: 'DISPENSA',
+        policialMatricula: '127934-3',
+        policialSubstitutoMatricula: null,
+        guarnicaoId: 'g1',
+        escalaMensalId: 'em1',
+        horarioInicio: '06:00:00',
+        horarioFim: '18:00:00',
+        processoSei: '44900999',
+        observacao: 'AUTORIZADO PELA CIA',
+      },
+    ]);
+  });
+
+  it('removes an alteracao by id', async () => {
+    const eqSpy = vi.fn().mockResolvedValue({ error: null });
+    const deleteSpy = vi.fn().mockReturnValue({ eq: eqSpy });
+    const supabaseStub = { client: { from: () => ({ delete: deleteSpy }) } };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    await service.removerAlteracao('alt1');
+
+    expect(eqSpy).toHaveBeenCalledWith('id', 'alt1');
+  });
 });
