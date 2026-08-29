@@ -18,7 +18,16 @@ import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhi
 import { EscalaMensalService } from '../../../core/services/escala-mensal.service';
 import { AuthService } from '../../../core/services/auth.service';
 
-type TipoLancamento = 'FALTA' | 'ATRASADO' | 'PERMUTA' | 'FOLGA' | 'REMANEJAMENTO' | 'LICENCA';
+type TipoLancamento =
+  | 'ATRASADO'
+  | 'REMANEJAMENTO'
+  | 'PERMUTA'
+  | 'CURSO'
+  | 'DISPENSA'
+  | 'EXPEDIENTE'
+  | 'FOLGA'
+  | 'FALTA_LTS'
+  | 'AUSENCIA_SERVICO';
 
 interface CardGuarnicao {
   cardId: string;
@@ -122,8 +131,21 @@ export class PainelPcPage {
   readonly salvandoBaixa = signal(false);
 
   readonly modalRow = signal<RosterRow | null>(null);
-  readonly tiposLancamento: TipoLancamento[] = ['FALTA', 'ATRASADO', 'PERMUTA', 'FOLGA', 'REMANEJAMENTO', 'LICENCA'];
-  readonly tipoLancamento = signal<TipoLancamento>('FALTA');
+  readonly tiposLancamento: TipoLancamento[] = [
+    'PERMUTA', 'CURSO', 'DISPENSA', 'EXPEDIENTE', 'FOLGA', 'FALTA_LTS', 'AUSENCIA_SERVICO', 'ATRASADO', 'REMANEJAMENTO',
+  ];
+  readonly rotulosTipoLancamento: Record<TipoLancamento, string> = {
+    PERMUTA: 'Permuta',
+    CURSO: 'Curso',
+    DISPENSA: 'Dispensa',
+    EXPEDIENTE: 'Expediente',
+    FOLGA: 'Folga',
+    FALTA_LTS: 'Falta (LTS/DTS)',
+    AUSENCIA_SERVICO: 'Ausência do serviço',
+    ATRASADO: 'Atrasado',
+    REMANEJAMENTO: 'Remanejamento',
+  };
+  readonly tipoLancamento = signal<TipoLancamento>('PERMUTA');
   readonly formSubstitutoMatricula = signal('');
   readonly formMotivo = signal('');
   readonly formSeiNumero = signal('');
@@ -132,6 +154,8 @@ export class PainelPcPage {
   readonly formHorarioChegada = signal('');
   readonly formLicencaInicio = signal('');
   readonly formLicencaFim = signal('');
+  readonly formObservacao = signal('');
+  readonly formProcessoSei = signal('');
   readonly registrando = signal(false);
 
   readonly funcoesFixas = signal<FuncaoFixaRow[]>([]);
@@ -518,10 +542,12 @@ export class PainelPcPage {
   abrirModal(row: RosterRow): void {
     if (!this.podeEditar()) return;
     this.modalRow.set(row);
-    this.tipoLancamento.set(row.statusEfetivo === 'ATRASADO' ? 'ATRASADO' : 'FALTA');
-    this.formMotivo.set(row.statusEfetivo === 'FALTA' || row.statusEfetivo === 'ATRASADO' ? (row.detalhe ?? '') : '');
+    this.tipoLancamento.set(row.statusEfetivo === 'ATRASADO' ? 'ATRASADO' : 'PERMUTA');
+    this.formMotivo.set(row.statusEfetivo === 'ATRASADO' ? (row.detalhe ?? '') : '');
     this.formSubstitutoMatricula.set('');
     this.formSeiNumero.set('');
+    this.formProcessoSei.set('');
+    this.formObservacao.set('');
     this.formAutorizacao.set('');
     this.formDestino.set('');
     this.formHorarioChegada.set('');
@@ -543,60 +569,36 @@ export class PainelPcPage {
     this.errorMessage.set(null);
     try {
       const data = this.data();
-      switch (this.tipoLancamento()) {
-        case 'FALTA':
-          await this.lancamentoService.registrarFalta({
-            data,
-            policial_matricula: linha.policialMatricula,
-            escala_mensal_id: linha.escalaMensalId,
-            motivo: this.formMotivo() || null,
-          });
-          break;
-        case 'ATRASADO':
-          await this.lancamentoService.registrarAtraso({
-            data,
-            policial_matricula: linha.policialMatricula,
-            escala_mensal_id: linha.escalaMensalId,
-            horario_chegada: this.formHorarioChegada() || null,
-            motivo: this.formMotivo() || null,
-            sei_numero: this.formSeiNumero() || null,
-          });
-          break;
-        case 'PERMUTA':
-          await this.lancamentoService.registrarPermuta({
-            data,
-            policial_substituido_matricula: linha.policialMatricula,
-            policial_substituto_matricula: this.formSubstitutoMatricula(),
-            escala_mensal_id: linha.escalaMensalId,
-            sei_numero: this.formSeiNumero() || null,
-          });
-          break;
-        case 'FOLGA':
-          await this.lancamentoService.registrarFolga({
-            data,
-            policial_matricula: linha.policialMatricula,
-            escala_mensal_id: linha.escalaMensalId,
-            sei_numero: this.formSeiNumero() || null,
-            autorizacao: this.formAutorizacao() || null,
-          });
-          break;
-        case 'REMANEJAMENTO':
-          await this.lancamentoService.registrarRemanejamento({
-            data,
-            policial_matricula: linha.policialMatricula,
-            escala_mensal_id: linha.escalaMensalId,
-            destino: this.formDestino(),
-          });
-          break;
-        case 'LICENCA':
-          await this.lancamentoService.registrarLicenca({
-            policial_matricula: linha.policialMatricula,
-            escala_mensal_id: linha.escalaMensalId,
-            data_inicio: this.formLicencaInicio() || data,
-            data_fim: this.formLicencaFim() || data,
-            sei_numero: this.formSeiNumero() || null,
-          });
-          break;
+      const tipo = this.tipoLancamento();
+      if (tipo === 'ATRASADO') {
+        await this.lancamentoService.registrarAtraso({
+          data,
+          policial_matricula: linha.policialMatricula,
+          escala_mensal_id: linha.escalaMensalId,
+          horario_chegada: this.formHorarioChegada() || null,
+          motivo: this.formMotivo() || null,
+          sei_numero: this.formSeiNumero() || null,
+        });
+      } else if (tipo === 'REMANEJAMENTO') {
+        await this.lancamentoService.registrarRemanejamento({
+          data,
+          policial_matricula: linha.policialMatricula,
+          escala_mensal_id: linha.escalaMensalId,
+          destino: this.formDestino(),
+        });
+      } else {
+        await this.lancamentoService.registrarAlteracao({
+          data,
+          tipo,
+          policial_matricula: linha.policialMatricula,
+          policial_substituto_matricula: tipo === 'PERMUTA' ? this.formSubstitutoMatricula() : null,
+          guarnicao_id: linha.guarnicaoId,
+          escala_mensal_id: linha.escalaMensalId,
+          horario_inicio: linha.horarioInicio,
+          horario_fim: linha.horarioFim,
+          processo_sei: this.formProcessoSei() || null,
+          observacao: this.formObservacao() || null,
+        });
       }
       this.fecharModal();
       await this.reloadRoster();
