@@ -54,6 +54,15 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['PC_LANCAMENTO', 'ADMIN'] },
       },
+      {
+        path: 'relatorio-original',
+        loadComponent: () =>
+          import('./features/relatorio-original/relatorio-original-page/relatorio-original-page').then(
+            (m) => m.RelatorioOriginalPage,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['PC_LANCAMENTO', 'ADMIN'] },
+      },
     ],
   },
   {

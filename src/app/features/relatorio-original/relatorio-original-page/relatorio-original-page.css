@@ -1,0 +1,24 @@
+/* A pré-visualização espelha o que será colado no SEI: fundo branco, texto
+   preto, tabelas com borda — independente do tema da aplicação. */
+.relatorio-preview {
+  color: #000;
+}
+
+.relatorio-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 6pt 0;
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 11pt;
+}
+
+.relatorio-preview th,
+.relatorio-preview td {
+  border: 1px solid #000;
+  padding: 3pt 5pt;
+  vertical-align: top;
+}
+
+.relatorio-preview th {
+  background-color: #e6e6e6;
+}

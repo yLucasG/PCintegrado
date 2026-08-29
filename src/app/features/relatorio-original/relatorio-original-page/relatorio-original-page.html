@@ -1,0 +1,60 @@
+<div>
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="font-display text-2xl font-semibold text-slate-800 dark:text-slate-100">Relatório Original</h1>
+    <div class="flex items-center gap-3">
+      <label class="text-sm text-slate-600 dark:text-slate-300">
+        Data
+        <input
+          class="ml-2 rounded border border-slate-300 bg-white px-3 py-2 text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+          type="date"
+          [ngModel]="data()"
+          (ngModelChange)="onDataChange($event)"
+          name="data"
+        />
+      </label>
+      <button
+        type="button"
+        class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white dark:bg-blue-500"
+        (click)="copiarRelatorio()"
+      >
+        {{ copiado() ? 'Copiado!' : 'Copiar para o SEI' }}
+      </button>
+    </div>
+  </div>
+
+  <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    "Copiar para o SEI" coloca o relatório na área de transferência como tabelas. Cole direto no editor do SEI (Ctrl+V).
+  </p>
+
+  @if (errorMessage()) {
+    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="mt-6 text-slate-500 dark:text-slate-400">Carregando...</p>
+  } @else {
+    <section class="mt-6 grid gap-4">
+      <h2 class="text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Campos editáveis</h2>
+      @for (item of campos; track item.campo) {
+        <div class="rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+          <label class="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-200">{{ item.titulo }}</label>
+          <textarea
+            class="w-full rounded border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            rows="2"
+            [ngModel]="complementos()[item.campo]"
+            (ngModelChange)="updateComplemento(item.campo, $event)"
+            (blur)="onSalvarComplemento(item.campo)"
+            name="complemento-{{ item.campo }}"
+          ></textarea>
+        </div>
+      }
+    </section>
+
+    <section class="mt-6">
+      <h2 class="mb-3 text-sm font-semibold uppercase text-slate-500 dark:text-slate-400">Pré-visualização</h2>
+      <div class="relatorio-preview overflow-x-auto rounded-lg bg-white p-6 shadow dark:bg-white">
+        <div [innerHTML]="relatorioPreview"></div>
+      </div>
+    </section>
+  }
+</div>
