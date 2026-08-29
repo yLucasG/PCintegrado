@@ -192,6 +192,102 @@ describe('LancamentoService', () => {
     expect(result[0].detalheId).toBeNull();
   });
 
+  it('maps a CURSO alteracao to statusEfetivo CURSO with the observacao as detalhe', async () => {
+    const supabaseStub = buildSupabaseStub({
+      lancamento_faltas: [],
+      lancamento_atrasos: [],
+      lancamento_permutas: [],
+      lancamento_folgas: [],
+      lancamento_remanejamentos: [],
+      lancamento_licencas: [],
+      lancamento_alteracoes: [
+        {
+          id: 'alt1',
+          tipo: 'CURSO',
+          policial_matricula: '127934-3',
+          policial_substituto_matricula: null,
+          guarnicao_id: 'g1',
+          horario_inicio: '06:00:00',
+          horario_fim: '18:00:00',
+          observacao: 'CFSD',
+        },
+      ],
+    });
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listRosterDoDia('2026-08-04');
+
+    expect(result[0].statusEfetivo).toBe('CURSO');
+    expect(result[0].detalhe).toBe('CFSD');
+    expect(result[0].detalheId).toBe('alt1');
+  });
+
+  it('maps AUSENCIA_SERVICO to statusEfetivo AUSENCIA', async () => {
+    const supabaseStub = buildSupabaseStub({
+      lancamento_faltas: [],
+      lancamento_atrasos: [],
+      lancamento_permutas: [],
+      lancamento_folgas: [],
+      lancamento_remanejamentos: [],
+      lancamento_licencas: [],
+      lancamento_alteracoes: [
+        { id: 'a1', tipo: 'AUSENCIA_SERVICO', policial_matricula: '127934-3', policial_substituto_matricula: null, guarnicao_id: 'g1', horario_inicio: '06:00:00', horario_fim: '18:00:00', observacao: null },
+      ],
+    });
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listRosterDoDia('2026-08-04');
+
+    expect(result[0].statusEfetivo).toBe('AUSENCIA');
+  });
+
+  it('on a PERMUTA alteracao, marks the substituido SUBSTITUIDO and injects a substitute row', async () => {
+    const supabaseStub = buildSupabaseStub({
+      lancamento_faltas: [],
+      lancamento_atrasos: [],
+      lancamento_permutas: [],
+      lancamento_folgas: [],
+      lancamento_remanejamentos: [],
+      lancamento_licencas: [],
+      lancamento_alteracoes: [
+        {
+          id: 'p1',
+          tipo: 'PERMUTA',
+          policial_matricula: '127934-3',
+          policial_substituto_matricula: '555555-5',
+          guarnicao_id: 'g1',
+          horario_inicio: '06:00:00',
+          horario_fim: '18:00:00',
+          observacao: null,
+        },
+      ],
+    });
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: SupabaseService, useValue: supabaseStub }],
+    });
+
+    const service = TestBed.inject(LancamentoService);
+    const result = await service.listRosterDoDia('2026-08-04');
+
+    const substituido = result.find((r) => r.policialMatricula === '127934-3');
+    const substituto = result.find((r) => r.policialMatricula === '555555-5');
+    expect(substituido?.statusEfetivo).toBe('SUBSTITUIDO');
+    expect(substituido?.detalhe).toContain('555555-5');
+    expect(substituto).toBeDefined();
+    expect(substituto?.guarnicaoId).toBe('g1');
+    expect(substituto?.statusEfetivo).toBe('PREVISTO');
+    expect(substituto?.substituindoMatricula).toBe('127934-3');
+  });
+
   it('registers a falta via insert on lancamento_faltas', async () => {
     const insertSpy = vi.fn().mockResolvedValue({ error: null });
     const supabaseStub = { client: { from: () => ({ insert: insertSpy }) } };

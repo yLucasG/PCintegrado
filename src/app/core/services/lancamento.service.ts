@@ -26,7 +26,11 @@ export type StatusEfetivo =
   | 'SUBSTITUIDO'
   | 'FOLGA'
   | 'REMANEJADO'
-  | 'LICENCA';
+  | 'LICENCA'
+  | 'CURSO'
+  | 'DISPENSA'
+  | 'EXPEDIENTE'
+  | 'AUSENCIA';
 
 export interface RosterRow {
   escalaMensalId: string;
@@ -38,6 +42,7 @@ export interface RosterRow {
   statusEfetivo: StatusEfetivo;
   detalhe: string | null;
   detalheId: string | null;
+  substituindoMatricula: string | null;
 }
 
 export interface RegistrarFaltaInput {
@@ -235,7 +240,9 @@ export class LancamentoService {
       data_fim: string;
     }[];
 
-    return roster.map((row): RosterRow => {
+    const alteracoes = await this.listAlteracoesDoDia(data);
+
+    const linhas = roster.map((row): RosterRow => {
       const base = {
         escalaMensalId: row.id,
         guarnicaoId: row.guarnicao_id,
@@ -243,6 +250,7 @@ export class LancamentoService {
         funcao: row.funcao,
         horarioInicio: row.horario_inicio,
         horarioFim: row.horario_fim,
+        substituindoMatricula: null as string | null,
       };
 
       const licenca = licencas.find((l) => l.policial_matricula === row.policial_matricula);
@@ -252,6 +260,33 @@ export class LancamentoService {
           statusEfetivo: 'LICENCA',
           detalhe: `${licenca.data_inicio} a ${licenca.data_fim}`,
           detalheId: licenca.id,
+        };
+      }
+
+      const alteracao = alteracoes.find((a) => a.policialMatricula === row.policial_matricula);
+      if (alteracao) {
+        const mapa: Record<TipoAlteracao, StatusEfetivo> = {
+          PERMUTA: 'SUBSTITUIDO',
+          CURSO: 'CURSO',
+          DISPENSA: 'DISPENSA',
+          EXPEDIENTE: 'EXPEDIENTE',
+          FOLGA: 'FOLGA',
+          FALTA_LTS: 'LICENCA',
+          AUSENCIA_SERVICO: 'AUSENCIA',
+        };
+        if (alteracao.tipo === 'PERMUTA') {
+          return {
+            ...base,
+            statusEfetivo: 'SUBSTITUIDO',
+            detalhe: `Substituído por ${alteracao.policialSubstitutoMatricula}`,
+            detalheId: alteracao.id,
+          };
+        }
+        return {
+          ...base,
+          statusEfetivo: mapa[alteracao.tipo],
+          detalhe: alteracao.observacao,
+          detalheId: alteracao.id,
         };
       }
 
@@ -292,6 +327,27 @@ export class LancamentoService {
 
       return { ...base, statusEfetivo: 'PREVISTO', detalhe: null, detalheId: null };
     });
+
+    const sinteticas: RosterRow[] = [];
+    for (const alteracao of alteracoes) {
+      if (alteracao.tipo !== 'PERMUTA' || !alteracao.policialSubstitutoMatricula) continue;
+      const original = roster.find((r) => r.policial_matricula === alteracao.policialMatricula);
+      if (!original) continue;
+      sinteticas.push({
+        escalaMensalId: original.id,
+        guarnicaoId: original.guarnicao_id,
+        policialMatricula: alteracao.policialSubstitutoMatricula,
+        funcao: original.funcao,
+        horarioInicio: original.horario_inicio,
+        horarioFim: original.horario_fim,
+        statusEfetivo: 'PREVISTO',
+        detalhe: `Substituindo ${alteracao.policialMatricula}`,
+        detalheId: null,
+        substituindoMatricula: alteracao.policialMatricula,
+      });
+    }
+
+    return [...linhas, ...sinteticas];
   }
 
   async registrarFalta(input: RegistrarFaltaInput): Promise<void> {

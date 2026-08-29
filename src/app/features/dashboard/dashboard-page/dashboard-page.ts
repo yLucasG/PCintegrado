@@ -23,6 +23,10 @@ const STATUS_LABELS: Record<StatusEfetivo, string> = {
   FOLGA: 'Folgas',
   REMANEJADO: 'Remanejamentos',
   LICENCA: 'LTS/DTS',
+  CURSO: 'Cursos',
+  DISPENSA: 'Dispensas',
+  EXPEDIENTE: 'Expediente',
+  AUSENCIA: 'Ausências',
 };
 
 const STATUS_ORDER: StatusEfetivo[] = [
@@ -43,6 +47,10 @@ const STATUS_CARD_CLASSES: Record<StatusEfetivo, string> = {
   FOLGA: 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   REMANEJADO: 'bg-violet-50 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
   LICENCA: 'bg-sky-50 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+  CURSO: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  DISPENSA: 'bg-teal-50 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
+  EXPEDIENTE: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+  AUSENCIA: 'bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
 };
 
 interface ViaturaDesativada {

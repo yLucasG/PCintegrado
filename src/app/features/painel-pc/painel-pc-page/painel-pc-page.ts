@@ -42,6 +42,10 @@ const STATUS_BADGE_CLASSES: Record<StatusEfetivo, string> = {
   FOLGA: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
   REMANEJADO: 'bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300',
   LICENCA: 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300',
+  CURSO: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300',
+  DISPENSA: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300',
+  EXPEDIENTE: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300',
+  AUSENCIA: 'bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300',
 };
 
 const STATUS_LABELS: Record<StatusEfetivo, string> = {
@@ -52,6 +56,10 @@ const STATUS_LABELS: Record<StatusEfetivo, string> = {
   FOLGA: 'Folga',
   REMANEJADO: 'Remanejado',
   LICENCA: 'LTS/DTS',
+  CURSO: 'Curso',
+  DISPENSA: 'Dispensa',
+  EXPEDIENTE: 'Expediente',
+  AUSENCIA: 'Ausência',
 };
 
 @Component({
