@@ -87,9 +87,13 @@ export class EscalaPjesPage {
     this.errorMessage.set(null);
     try {
       const itens = await this.pdfService.extrairItens(file);
-      const linhas = extrairEscalaPjes(itens);
+      const { linhas, ignoradas } = extrairEscalaPjes(itens);
       this.linhasRevisao.set(linhas.map((l) => ({ ...l, erros: validar(l) })));
-      if (linhas.length === 0) {
+      if (ignoradas > 0) {
+        this.errorMessage.set(
+          `${ignoradas} linha(s) não reconhecida(s) no PDF — confira o arquivo e complete manualmente.`,
+        );
+      } else if (linhas.length === 0) {
         this.errorMessage.set('Não foi possível extrair linhas desse PDF. Confira o arquivo ou lance manualmente.');
       }
     } catch {
@@ -132,10 +136,10 @@ export class EscalaPjesPage {
           data: l.data,
           gt_rotulo: l.gtRotulo,
           funcao: l.funcao,
-          graduacao: l.graduacao,
-          matricula: l.matricula,
+          graduacao: l.graduacao?.trim() || null,
+          matricula: l.matricula?.trim() || null,
           nome_guerra: l.nomeGuerra,
-          telefone: l.telefone,
+          telefone: l.telefone?.trim() || null,
           horario_inicio: l.horarioInicio,
           horario_fim: l.horarioFim,
           origem: 'PDF',

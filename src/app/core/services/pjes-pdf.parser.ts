@@ -59,14 +59,20 @@ function agruparLinhas(itens: ItemTextoPdf[]): ItemTextoPdf[][] {
   return linhas;
 }
 
-const RE_GT = /^GT ?\d{4,5}$/i;
+const RE_GT = /^(GT ?\d{4,5})\b(.*)$/i;
 const RE_MATRICULA = /^\d{5,6}-?\d?$/;
 const RE_TELEFONE = /^\d{10,11}$/;
 const RE_NUM5 = /^\d{5}$/;
 const RE_OME = /(^|\s)(BPM|CIPM|CIPMOTO|CIA|COMPANHIA|GATI|RPMON|BPRV|BPTRAN|BPGD|CPRAIA)(\s|$)/i;
 const RE_ORDINAL = /^\d{1,3}[ºª]$/;
 
-export function extrairEscalaPjes(itens: ItemTextoPdf[]): LinhaPjesExtraida[] {
+export interface ResultadoExtracaoPjes {
+  linhas: LinhaPjesExtraida[];
+  /** Linhas que pareciam dados mas foram descartadas (sem data/GT reconhecidos). */
+  ignoradas: number;
+}
+
+export function extrairEscalaPjes(itens: ItemTextoPdf[]): ResultadoExtracaoPjes {
   const paginas = new Map<number, ItemTextoPdf[]>();
   for (const it of itens) {
     if (!paginas.has(it.page)) paginas.set(it.page, []);
@@ -74,6 +80,7 @@ export function extrairEscalaPjes(itens: ItemTextoPdf[]): LinhaPjesExtraida[] {
   }
 
   const resultado: LinhaPjesExtraida[] = [];
+  let ignoradas = 0;
 
   for (const page of [...paginas.keys()].sort((a, b) => a - b)) {
     const linhas = agruparLinhas(paginas.get(page)!);
@@ -91,11 +98,17 @@ export function extrairEscalaPjes(itens: ItemTextoPdf[]): LinhaPjesExtraida[] {
         if (d) { data = d; continue; }
       }
 
-      // Cabeçalho de seção: "GT 16100" | "GT16141" | "MO"
-      const primeiro = textos[0].toUpperCase();
-      if (RE_GT.test(primeiro) || primeiro === 'MO') {
-        const rotulo = textos.slice(1).join(' ').toUpperCase();
-        gtRotulo = !rotulo || rotulo === primeiro ? primeiro : `${primeiro} - ${rotulo}`;
+      // Cabeçalho de seção: "GT 16100" | "GT16141" | "GT 16300 - FISCALIZAÇÃO POG" | "MO"
+      const mGt = RE_GT.exec(textos[0]);
+      if (mGt || textos[0].toUpperCase() === 'MO') {
+        const marcador = (mGt ? mGt[1] : 'MO').toUpperCase();
+        const restoToken = mGt ? mGt[2] : textos[0].slice(2);
+        const rotulo = [restoToken, ...textos.slice(1)]
+          .join(' ')
+          .replace(/^[\s–—-]+/, '')
+          .trim()
+          .toUpperCase();
+        gtRotulo = !rotulo || rotulo === marcador ? marcador : `${marcador} - ${rotulo}`;
         horarioBloco = null;
         continue;
       }
@@ -109,7 +122,12 @@ export function extrairEscalaPjes(itens: ItemTextoPdf[]): LinhaPjesExtraida[] {
       const tok0 = textos[0].toUpperCase();
       const ehFuncao = (FUNCOES as string[]).includes(tok0);
       const ehNum5 = RE_NUM5.test(textos[0]);
-      if (!data || !gtRotulo || (!ehFuncao && !ehNum5)) continue;
+      if (!data || !gtRotulo) {
+        // Parecia uma linha de dados mas não há data/GT reconhecidos: conta como ignorada.
+        if (textos.length >= 3 && (ehFuncao || ehNum5)) ignoradas++;
+        continue;
+      }
+      if (!ehFuncao && !ehNum5) continue;
 
       const funcao: FuncaoPjes = ehFuncao ? (tok0 as FuncaoPjes) : 'OUTRO';
       const resto = textos.slice(1);
@@ -147,7 +165,7 @@ export function extrairEscalaPjes(itens: ItemTextoPdf[]): LinhaPjesExtraida[] {
         funcao,
         graduacao,
         matricula,
-        nomeGuerra: nomeGuerra || (matricula ?? ''),
+        nomeGuerra,
         telefone,
         horarioInicio: hFinal ? hFinal[0] : '',
         horarioFim: hFinal ? hFinal[1] : '',
@@ -155,5 +173,5 @@ export function extrairEscalaPjes(itens: ItemTextoPdf[]): LinhaPjesExtraida[] {
     }
   }
 
-  return resultado;
+  return { linhas: resultado, ignoradas };
 }
