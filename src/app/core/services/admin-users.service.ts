@@ -5,6 +5,7 @@ import { RoleUsuario } from './auth.service';
 export interface PerfilUsuarioRow {
   id: string;
   role: RoleUsuario;
+  email: string;
 }
 
 export interface CreateUserInput {
@@ -24,7 +25,7 @@ export class AdminUsersService {
   private readonly supabase = inject(SupabaseService);
 
   async listPerfis(): Promise<PerfilUsuarioRow[]> {
-    const { data, error } = await this.supabase.client.from('perfis_usuarios').select('id, role');
+    const { data, error } = await this.supabase.client.rpc('admin_listar_usuarios');
     if (error) {
       throw error;
     }

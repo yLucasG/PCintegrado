@@ -3,11 +3,12 @@ import { AdminUsersService } from './admin-users.service';
 import { SupabaseService } from './supabase.service';
 
 describe('AdminUsersService', () => {
-  it('lists perfis via a select on perfis_usuarios', async () => {
-    const rows = [{ id: '1', role: 'ADMIN' }];
+  it('lists perfis with email via the admin_listar_usuarios RPC', async () => {
+    const rows = [{ id: '1', role: 'ADMIN', email: 'admin@example.com' }];
+    const rpcSpy = vi.fn().mockResolvedValue({ data: rows, error: null });
     const supabaseStub = {
       client: {
-        from: () => ({ select: () => Promise.resolve({ data: rows, error: null }) }),
+        rpc: rpcSpy,
         functions: { invoke: vi.fn() },
       },
     };
@@ -18,6 +19,7 @@ describe('AdminUsersService', () => {
 
     const service = TestBed.inject(AdminUsersService);
     const result = await service.listPerfis();
+    expect(rpcSpy).toHaveBeenCalledWith('admin_listar_usuarios');
     expect(result).toEqual(rows as any);
   });
 
