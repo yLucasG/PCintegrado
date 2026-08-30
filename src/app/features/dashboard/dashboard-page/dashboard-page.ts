@@ -159,9 +159,7 @@ export class DashboardPage {
       return this.pjesRoster().filter((r) => turnoAtivoEm(r.horarioInicio, r.horarioFim, momento));
     }
     const horario = this.filtroHorario();
-    return horario
-      ? this.pjesRoster().filter((r) => r.horarioInicio.slice(0, 5) === horario)
-      : this.pjesRoster();
+    return horario ? this.pjesRoster().filter((r) => r.horarioInicio === horario) : this.pjesRoster();
   }
 
   get pjesCards(): CardPjesDash[] {
@@ -179,10 +177,6 @@ export class DashboardPage {
       grupos.get(chave)!.rows.push(r);
     }
     return Array.from(grupos.values()).sort((a, b) => a.gtRotulo.localeCompare(b.gtRotulo));
-  }
-
-  get pjesFaltas(): number {
-    return this.pjesRosterFiltrado.filter((r) => r.status === 'FALTA').length;
   }
 
   get baixasFiltradas(): BaixaRow[] {
@@ -250,7 +244,10 @@ export class DashboardPage {
   }
 
   contagemPorStatus(status: StatusEfetivo): number {
-    return this.rosterFiltrado.filter((r) => r.statusEfetivo === status).length;
+    let n = this.rosterFiltrado.filter((r) => r.statusEfetivo === status).length;
+    if (status === 'FALTA') n += this.pjesRosterFiltrado.filter((r) => r.status === 'FALTA').length;
+    if (status === 'ATRASADO') n += this.pjesRosterFiltrado.filter((r) => r.status === 'ATRASADO').length;
+    return n;
   }
 
   statusLabel(status: StatusEfetivo): string {

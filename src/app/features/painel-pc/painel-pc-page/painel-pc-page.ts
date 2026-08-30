@@ -451,7 +451,7 @@ export class PainelPcPage {
     if (momento) {
       rows = rows.filter((r) => turnoAtivoEm(r.horarioInicio, r.horarioFim, momento));
     } else if (horario) {
-      rows = rows.filter((r) => r.horarioInicio.slice(0, 5) === horario);
+      rows = rows.filter((r) => r.horarioInicio === horario);
     }
     const busca = this.buscaPolicial().trim().toLowerCase();
     if (busca) {
