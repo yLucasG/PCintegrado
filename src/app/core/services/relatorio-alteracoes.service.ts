@@ -375,6 +375,8 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
     out.push(
       tabela(['GT', 'FUNÇÃO', 'GRAD', 'MATRÍCULA', 'NOME', 'HORÁRIO', 'SITUAÇÃO'], linhasPjes),
     );
+    // Mantém também o quadro pré-montado dos totais EXTRA de PJES (não constam na escala do dia).
+    out.push(tabelaDuasColunas(PJES_TOTAL_ALT, PJES_SERVICO_ALT));
   } else {
     out.push(tabelaDuasColunas(PJES_TOTAL_ALT, PJES_SERVICO_ALT));
   }

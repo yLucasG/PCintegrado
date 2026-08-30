@@ -139,6 +139,8 @@ describe('montarRelatorioAlteracoesHtml', () => {
     expect(secao).toContain('GRISI');
     expect(secao).toContain('PRESENTE');
     expect(secao).toContain('FALTOU');
+    // F-rec2: o quadro pré-montado dos totais EXTRA continua presente ao lado da escala.
+    expect(secao).toContain("GS'S EXTRA");
   });
 
   it('mantém o quadro pré-montado PJES / DIÁRIA quando não há linhas PJES', () => {
