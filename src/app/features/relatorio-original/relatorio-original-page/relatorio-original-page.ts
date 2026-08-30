@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AlteracaoRow, BaixaRow, LancamentoService, RosterRow } from '../../../core/services/lancamento.service';
 import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
 import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.service';
+import { PjesService, PjesRosterRow } from '../../../core/services/pjes.service';
 import {
   CampoComplementoAlt,
   RelatorioAlteracoesInput,
@@ -36,6 +37,7 @@ export class RelatorioOriginalPage {
   private readonly guarnicoesService = inject(GuarnicoesService);
   private readonly policiaisService = inject(PoliciaisService);
   private readonly relatorioService = inject(RelatorioAlteracoesService);
+  private readonly pjesService = inject(PjesService);
   private readonly sanitizer = inject(DomSanitizer);
 
   readonly data = signal(hojeIso());
@@ -44,6 +46,7 @@ export class RelatorioOriginalPage {
   readonly alteracoes = signal<AlteracaoRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
   readonly policiais = signal<PolicialRow[]>([]);
+  readonly pjes = signal<PjesRosterRow[]>([]);
   readonly complementos = signal<Record<CampoComplementoAlt, string>>({
     ALT_GRAD_MONITORAMENTO: '',
     ALT_ESCALA_1CIA: '',
@@ -66,19 +69,21 @@ export class RelatorioOriginalPage {
     this.errorMessage.set(null);
     try {
       const data = this.data();
-      const [roster, baixas, alteracoes, guarnicoes, policiais, complementoRows] = await Promise.all([
+      const [roster, baixas, alteracoes, guarnicoes, policiais, complementoRows, pjes] = await Promise.all([
         this.lancamentoService.listRosterDoDia(data),
         this.lancamentoService.listBaixasDoDia(data),
         this.lancamentoService.listAlteracoesDoDia(data),
         this.guarnicoesService.listGuarnicoes(),
         this.policiaisService.listPoliciais(),
         this.relatorioService.listComplementos(data),
+        this.pjesService.listPjesRosterDoDia(data),
       ]);
       this.roster.set(roster);
       this.baixas.set(baixas);
       this.alteracoes.set(alteracoes);
       this.guarnicoes.set(guarnicoes);
       this.policiais.set(policiais);
+      this.pjes.set(pjes);
       const c = {
         ALT_GRAD_MONITORAMENTO: '', ALT_ESCALA_1CIA: '', ALT_ESCALA_2CIA: '',
         ALT_ESCALA_3CIA: '', ALT_ESCALA_PJES: '', ALT_OBSERVACOES: '',
@@ -131,6 +136,7 @@ export class RelatorioOriginalPage {
       alteracoes: this.alteracoes(),
       baixas: this.baixas(),
       complementos: this.complementos(),
+      pjes: this.pjes(),
     };
   }
 

@@ -29,6 +29,7 @@ function baseInput(over: Partial<RelatorioAlteracoesInput> = {}): RelatorioAlter
     ],
     baixas: [],
     complementos: { ALT_GRAD_MONITORAMENTO: 'SGT SILVA', ALT_ESCALA_1CIA: '', ALT_ESCALA_2CIA: '', ALT_ESCALA_3CIA: '', ALT_ESCALA_PJES: '', ALT_OBSERVACOES: '' },
+    pjes: [],
     ...over,
   };
 }
@@ -123,5 +124,26 @@ describe('montarRelatorioAlteracoesHtml', () => {
     const html = montarRelatorioAlteracoesHtml(baseInput());
     expect(html).toContain('PJES / DIÁRIA');
     expect(html).toContain('POG A PÉ');
+  });
+
+  it('preenche PJES / DIÁRIA com a escala PJES quando há linhas', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput({
+      pjes: [
+        { escalaPjesId: 'e1', gtRotulo: 'GT 16100 - SUPERVISÃO', funcao: 'CMT', graduacao: 'TC', matricula: '102505-8', nomeGuerra: 'GRISI', telefone: null, horarioInicio: '16:00:00', horarioFim: '00:00:00', status: 'PREVISTO', horarioChegada: null, motivo: null },
+        { escalaPjesId: 'e2', gtRotulo: 'GT 16141 - 1º CPM', funcao: 'MOT', graduacao: 'SD', matricula: '130253-1', nomeGuerra: 'DIOGO', telefone: null, horarioInicio: '23:59:00', horarioFim: '05:59:00', status: 'FALTA', horarioChegada: null, motivo: null },
+      ],
+    }));
+    const secao = html.slice(html.indexOf('PJES / DIÁRIA'));
+    expect(secao).toContain('GT 16100 - SUPERVISÃO');
+    expect(secao).toContain('102505-8');
+    expect(secao).toContain('GRISI');
+    expect(secao).toContain('PRESENTE');
+    expect(secao).toContain('FALTOU');
+  });
+
+  it('mantém o quadro pré-montado PJES / DIÁRIA quando não há linhas PJES', () => {
+    const html = montarRelatorioAlteracoesHtml(baseInput({ pjes: [] }));
+    const secao = html.slice(html.indexOf('PJES / DIÁRIA'));
+    expect(secao).toContain("GS'S EXTRA");
   });
 });

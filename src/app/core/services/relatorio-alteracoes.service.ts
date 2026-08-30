@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { GuarnicaoRow, TipoGuarnicao } from './guarnicoes.service';
 import { PolicialRow } from './policiais.service';
 import { AlteracaoRow, BaixaRow, RosterRow, TipoAlteracao } from './lancamento.service';
+import { PjesRosterRow } from './pjes.service';
 
 export type CampoComplementoAlt =
   | 'ALT_GRAD_MONITORAMENTO'
@@ -25,6 +26,7 @@ export interface RelatorioAlteracoesInput {
   alteracoes: AlteracaoRow[];
   baixas: BaixaRow[];
   complementos: Record<CampoComplementoAlt, string>;
+  pjes: PjesRosterRow[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -354,9 +356,28 @@ export function montarRelatorioAlteracoesHtml(input: RelatorioAlteracoesInput): 
       `</tr></thead><tbody>${corpo.join('')}</tbody></table>`,
   );
 
-  // 10. PJES / DIÁRIA (pré-montado, preenchido à mão no SEI) -------
+  // 10. PJES / DIÁRIA -------------------------------------------------
   out.push(`<p style="${S_TITULO}">PJES / DIÁRIA</p>`);
-  out.push(tabelaDuasColunas(PJES_TOTAL_ALT, PJES_SERVICO_ALT));
+  if (input.pjes.length > 0) {
+    const situacao = (s: PjesRosterRow['status']): string =>
+      s === 'FALTA' ? 'FALTOU' : s === 'ATRASADO' ? 'ATRASADO' : 'PRESENTE';
+    const linhasPjes = [...input.pjes]
+      .sort((a, b) => a.gtRotulo.localeCompare(b.gtRotulo) || a.funcao.localeCompare(b.funcao))
+      .map((p) => [
+        esc(p.gtRotulo),
+        esc(p.funcao),
+        esc(p.graduacao),
+        esc(p.matricula),
+        esc(p.nomeGuerra),
+        `${esc(p.horarioInicio.slice(0, 5))}–${esc(p.horarioFim.slice(0, 5))}`,
+        situacao(p.status),
+      ]);
+    out.push(
+      tabela(['GT', 'FUNÇÃO', 'GRAD', 'MATRÍCULA', 'NOME', 'HORÁRIO', 'SITUAÇÃO'], linhasPjes),
+    );
+  } else {
+    out.push(tabelaDuasColunas(PJES_TOTAL_ALT, PJES_SERVICO_ALT));
+  }
 
   // 11. "O.S" CUMPRIDAS (lista fixa) ------------------------------
   out.push(`<p style="${S_TITULO}">"O.S" CUMPRIDAS</p>`);
