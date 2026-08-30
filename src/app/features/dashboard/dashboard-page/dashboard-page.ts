@@ -245,6 +245,7 @@ export class DashboardPage {
 
   contagemPorStatus(status: StatusEfetivo): number {
     let n = this.rosterFiltrado.filter((r) => r.statusEfetivo === status).length;
+    if (status === 'PREVISTO') n += this.pjesRosterFiltrado.filter((r) => r.status === 'PREVISTO').length;
     if (status === 'FALTA') n += this.pjesRosterFiltrado.filter((r) => r.status === 'FALTA').length;
     if (status === 'ATRASADO') n += this.pjesRosterFiltrado.filter((r) => r.status === 'ATRASADO').length;
     return n;

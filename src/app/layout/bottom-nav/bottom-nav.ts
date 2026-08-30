@@ -6,7 +6,7 @@ import { ThemeToggle } from '../theme-toggle/theme-toggle';
 
 const PERFIS_COM_ACESSO_ESCALAS = ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'];
 const PERFIS_COM_ACESSO_RELATORIO_SEI = ['ADMIN', 'PC_LANCAMENTO'];
-const PERFIS_COM_ACESSO_POLICIAIS = ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT', 'PJES'];
+const PERFIS_COM_ACESSO_POLICIAIS = ['ADMIN', 'CIA_1', 'CIA_2', 'CIA_3', 'PCTAT'];
 const PERFIS_COM_ACESSO_ESCALA_PJES = ['PJES', 'ADMIN'];
 
 @Component({
