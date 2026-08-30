@@ -63,6 +63,15 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { roles: ['PC_LANCAMENTO', 'ADMIN'] },
       },
+      {
+        path: 'escala-pjes',
+        loadComponent: () =>
+          import('./features/escala-pjes/escala-pjes-page/escala-pjes-page').then(
+            (m) => m.EscalaPjesPage,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['PJES', 'ADMIN'] },
+      },
     ],
   },
   {

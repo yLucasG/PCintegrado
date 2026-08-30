@@ -15,6 +15,11 @@
     <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/lancamento" routerLinkActive="text-blue-600">
       Painel do PC
     </a>
+    @if (podeVerEscalaPjes()) {
+      <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/escala-pjes" routerLinkActive="text-blue-600">
+        Escala PJES
+      </a>
+    }
     @if (podeVerPoliciais()) {
       <a class="text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400" routerLink="/policiais" routerLinkActive="text-blue-600">
         Policiais

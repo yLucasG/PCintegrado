@@ -1,0 +1,133 @@
+<div>
+  <h1 class="font-display text-2xl font-semibold text-slate-800 dark:text-slate-100">Escala PJES</h1>
+
+  @if (errorMessage()) {
+    <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ errorMessage() }}</p>
+  }
+  @if (info()) {
+    <p class="mt-2 text-sm text-emerald-600 dark:text-emerald-400">{{ info() }}</p>
+  }
+
+  <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+    <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Importar PDF</h2>
+    <input type="file" accept="application/pdf" (change)="onArquivo($event)" [disabled]="lendo()" />
+    @if (lendo()) { <p class="mt-2 text-sm text-slate-500">Lendo PDF...</p> }
+
+    @if (linhasRevisao().length > 0) {
+      <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">
+        Confira e corrija. As linhas importadas de cada dia substituem as anteriores importadas por PDF; lançamentos manuais não são afetados.
+      </p>
+      <div class="mt-2 overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead>
+            <tr class="text-slate-500 dark:text-slate-400">
+              <th class="py-1 pr-2">Data</th><th class="py-1 pr-2">GT</th><th class="py-1 pr-2">Função</th>
+              <th class="py-1 pr-2">Grad</th><th class="py-1 pr-2">Matrícula</th><th class="py-1 pr-2">Nome</th>
+              <th class="py-1 pr-2">Telefone</th><th class="py-1 pr-2">Início</th><th class="py-1 pr-2">Fim</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of linhasRevisao(); track $index) {
+              <tr class="border-t border-slate-100 dark:border-slate-800" [class.bg-red-50]="l.erros.length > 0">
+                <td><input class="w-24 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.data" (ngModelChange)="atualizarRevisao($index, 'data', $event)" name="d{{$index}}" /></td>
+                <td><input class="w-40 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.gtRotulo" (ngModelChange)="atualizarRevisao($index, 'gtRotulo', $event)" name="g{{$index}}" /></td>
+                <td>
+                  <select class="rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.funcao" (ngModelChange)="atualizarRevisao($index, 'funcao', $event)" name="f{{$index}}">
+                    @for (fn of funcoes; track fn) { <option [value]="fn">{{ fn }}</option> }
+                  </select>
+                </td>
+                <td><input class="w-16 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.graduacao" (ngModelChange)="atualizarRevisao($index, 'graduacao', $event)" name="gr{{$index}}" /></td>
+                <td><input class="w-24 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.matricula" (ngModelChange)="atualizarRevisao($index, 'matricula', $event)" name="m{{$index}}" /></td>
+                <td><input class="w-40 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.nomeGuerra" (ngModelChange)="atualizarRevisao($index, 'nomeGuerra', $event)" name="n{{$index}}" /></td>
+                <td><input class="w-28 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.telefone" (ngModelChange)="atualizarRevisao($index, 'telefone', $event)" name="t{{$index}}" /></td>
+                <td><input class="w-16 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.horarioInicio" (ngModelChange)="atualizarRevisao($index, 'horarioInicio', $event)" name="hi{{$index}}" /></td>
+                <td><input class="w-16 rounded border px-1 py-0.5 dark:bg-slate-800" [ngModel]="l.horarioFim" (ngModelChange)="atualizarRevisao($index, 'horarioFim', $event)" name="hf{{$index}}" /></td>
+                <td><button type="button" class="text-red-500" (click)="removerRevisao($index)">✕</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <button
+        type="button"
+        class="mt-3 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-blue-500"
+        [disabled]="!revisaoValida || salvandoImport()"
+        (click)="salvarImportacao()"
+      >
+        {{ salvandoImport() ? 'Salvando...' : 'Confirmar e salvar escala' }}
+      </button>
+    }
+  </section>
+
+  <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+    <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Adicionar manual (bloco por GT)</h2>
+    <div class="grid gap-2 sm:grid-cols-4">
+      <label class="text-sm">Data
+        <input type="date" class="mt-1 w-full rounded border px-2 py-1 dark:bg-slate-800" [ngModel]="manualData()" (ngModelChange)="manualData.set($event)" name="md" />
+      </label>
+      <label class="text-sm sm:col-span-2">GT / Setor
+        <input class="mt-1 w-full rounded border px-2 py-1 dark:bg-slate-800" placeholder="GT 16300 - Fiscalização POG" [ngModel]="manualGt()" (ngModelChange)="manualGt.set($event)" name="mg" />
+      </label>
+      <div class="flex gap-2 text-sm">
+        <label>Início<input class="mt-1 w-full rounded border px-2 py-1 dark:bg-slate-800" [ngModel]="manualInicio()" (ngModelChange)="manualInicio.set($event)" name="mi" /></label>
+        <label>Fim<input class="mt-1 w-full rounded border px-2 py-1 dark:bg-slate-800" [ngModel]="manualFim()" (ngModelChange)="manualFim.set($event)" name="mf" /></label>
+      </div>
+    </div>
+    <div class="mt-3 grid gap-2">
+      @for (l of manualLinhas(); track $index) {
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-6">
+          <select class="rounded border px-2 py-1 dark:bg-slate-800" [ngModel]="l.funcao" (ngModelChange)="atualizarLinhaManual($index, 'funcao', $event)" name="mlf{{$index}}">
+            @for (fn of funcoes; track fn) { <option [value]="fn">{{ fn }}</option> }
+          </select>
+          <input class="rounded border px-2 py-1 dark:bg-slate-800" placeholder="Grad" [ngModel]="l.graduacao" (ngModelChange)="atualizarLinhaManual($index, 'graduacao', $event)" name="mlg{{$index}}" />
+          <input class="rounded border px-2 py-1 dark:bg-slate-800" placeholder="Matrícula" [ngModel]="l.matricula" (ngModelChange)="atualizarLinhaManual($index, 'matricula', $event)" name="mlm{{$index}}" />
+          <input class="rounded border px-2 py-1 sm:col-span-2 dark:bg-slate-800" placeholder="Nome de guerra" [ngModel]="l.nomeGuerra" (ngModelChange)="atualizarLinhaManual($index, 'nomeGuerra', $event)" name="mln{{$index}}" />
+          <div class="flex gap-1">
+            <input class="w-full rounded border px-2 py-1 dark:bg-slate-800" placeholder="Telefone" [ngModel]="l.telefone" (ngModelChange)="atualizarLinhaManual($index, 'telefone', $event)" name="mlt{{$index}}" />
+            <button type="button" class="text-red-500" (click)="removerLinhaManual($index)">✕</button>
+          </div>
+        </div>
+      }
+    </div>
+    <div class="mt-3 flex gap-2">
+      <button type="button" class="rounded border px-3 py-1 text-sm dark:border-slate-600" (click)="adicionarLinhaManual()">+ linha</button>
+      <button type="button" class="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-blue-500" [disabled]="salvandoManual()" (click)="salvarManual()">
+        {{ salvandoManual() ? 'Salvando...' : 'Adicionar à escala' }}
+      </button>
+    </div>
+  </section>
+
+  <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="text-lg font-medium text-slate-700 dark:text-slate-200">Escala salva</h2>
+      <label class="text-sm">Data
+        <input type="date" class="ml-2 rounded border px-2 py-1 dark:bg-slate-800" [ngModel]="data()" (ngModelChange)="onDataChange($event)" name="ds" />
+      </label>
+    </div>
+    @if (loadingSalvas()) {
+      <p class="text-slate-500 dark:text-slate-400">Carregando...</p>
+    } @else if (salvas().length === 0) {
+      <p class="text-sm text-slate-500 dark:text-slate-400">Nada lançado para essa data.</p>
+    } @else {
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            <th class="py-2">GT</th><th class="py-2">Função</th><th class="py-2">Grad</th><th class="py-2">Matrícula</th>
+            <th class="py-2">Nome</th><th class="py-2">Horário</th><th class="py-2">Origem</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of salvas(); track l.id) {
+            <tr class="border-b border-slate-100 dark:border-slate-800">
+              <td class="py-2">{{ l.gtRotulo }}</td><td class="py-2">{{ l.funcao }}</td><td class="py-2">{{ l.graduacao }}</td>
+              <td class="py-2">{{ l.matricula }}</td><td class="py-2">{{ l.nomeGuerra }}</td>
+              <td class="py-2">{{ l.horarioInicio.slice(0,5) }}–{{ l.horarioFim.slice(0,5) }}</td>
+              <td class="py-2">{{ l.origem }}</td>
+              <td class="py-2"><button type="button" class="text-red-500" (click)="remover(l.id)">Remover</button></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</div>

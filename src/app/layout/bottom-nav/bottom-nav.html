@@ -12,6 +12,11 @@
   <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/lancamento" routerLinkActive="text-blue-600">
     Painel PC
   </a>
+  @if (podeVerEscalaPjes()) {
+    <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/escala-pjes" routerLinkActive="text-blue-600">
+      Escala PJES
+    </a>
+  }
   @if (podeVerPoliciais()) {
     <a class="shrink-0 text-sm text-slate-600 dark:text-slate-300" routerLink="/policiais" routerLinkActive="text-blue-600">
       Policiais
