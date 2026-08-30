@@ -300,6 +300,56 @@
     }
   </section>
 
+  @if (pjesCards.length > 0) {
+    <section class="mt-8">
+      <div class="mb-3 inline-flex items-center gap-2 rounded-full bg-fuchsia-100 px-3 py-1 text-xs font-semibold uppercase text-fuchsia-700 dark:bg-fuchsia-900/50 dark:text-fuchsia-300">
+        PJES · Serviço Extra
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (card of pjesCards; track card.chave) {
+          <div class="flex flex-col rounded-lg border border-l-4 border-l-fuchsia-500 border-white/60 bg-white/70 p-4 shadow backdrop-blur-md dark:border-slate-700/50 dark:border-l-fuchsia-400 dark:bg-slate-900/50">
+            <h3 class="font-display text-lg font-bold text-slate-800 dark:text-slate-100">{{ card.gtRotulo }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ card.horario }}</p>
+            <div class="mt-2 flex flex-col gap-2">
+              @for (linha of card.rows; track linha.escalaPjesId) {
+                <div class="rounded border border-slate-200/70 bg-white/50 px-2 py-2 text-sm dark:border-slate-700/60 dark:bg-slate-800/40">
+                  <div class="flex items-center justify-between gap-2">
+                    <span>
+                      <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">{{ linha.funcao }}</span>
+                      <span class="ml-1 text-slate-700 dark:text-slate-200">
+                        <span class="font-medium text-slate-500 dark:text-slate-400">{{ linha.graduacao }}</span>
+                        {{ linha.nomeGuerra }}
+                        @if (linha.matricula) { <span class="text-xs text-slate-400">({{ linha.matricula }})</span> }
+                      </span>
+                    </span>
+                    @if (linha.status !== 'PREVISTO') {
+                      <span class="rounded-full px-2 py-0.5 text-xs font-semibold"
+                        [ngClass]="linha.status === 'FALTA'
+                          ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
+                          : 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300'">
+                        {{ linha.status === 'FALTA' ? 'Faltou' : 'Atrasado' }}
+                      </span>
+                    }
+                  </div>
+                  @if (podeEditar()) {
+                    <div class="mt-1 flex gap-2">
+                      <button type="button" class="rounded border border-red-300 px-2 py-0.5 text-xs text-red-600 dark:border-red-700 dark:text-red-400" (click)="togglePjesFalta(linha)">
+                        {{ linha.status === 'FALTA' ? 'Desfazer falta' : 'Faltou' }}
+                      </button>
+                      <button type="button" class="rounded border border-orange-300 px-2 py-0.5 text-xs text-orange-600 dark:border-orange-700 dark:text-orange-400" (click)="togglePjesAtraso(linha)">
+                        {{ linha.status === 'ATRASADO' ? 'Desfazer atraso' : 'Atrasado' }}
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
   <section class="mt-6 rounded-lg bg-white p-4 shadow dark:bg-slate-900 dark:shadow-none dark:ring-1 dark:ring-slate-800">
     <h2 class="mb-3 text-lg font-medium text-slate-700 dark:text-slate-200">Funções fixas do dia</h2>
 

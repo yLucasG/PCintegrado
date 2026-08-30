@@ -17,6 +17,7 @@ import { PoliciaisService, PolicialRow } from '../../../core/services/policiais.
 import { CompanhiasService, CompanhiaRow } from '../../../core/services/companhias.service';
 import { EscalaMensalService } from '../../../core/services/escala-mensal.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { PjesService, PjesRosterRow } from '../../../core/services/pjes.service';
 
 type TipoLancamento =
   | 'ATRASADO'
@@ -28,6 +29,13 @@ type TipoLancamento =
   | 'FOLGA'
   | 'FALTA_LTS'
   | 'AUSENCIA_SERVICO';
+
+interface CardPjes {
+  chave: string;
+  gtRotulo: string;
+  horario: string;
+  rows: PjesRosterRow[];
+}
 
 interface CardGuarnicao {
   cardId: string;
@@ -84,6 +92,7 @@ export class PainelPcPage {
   private readonly companhiasService = inject(CompanhiasService);
   private readonly escalaMensalService = inject(EscalaMensalService);
   private readonly authService = inject(AuthService);
+  private readonly pjesService = inject(PjesService);
 
   /** Só o PC de Lançamento edita este painel; todos os outros perfis só veem. */
   podeEditar(): boolean {
@@ -92,6 +101,7 @@ export class PainelPcPage {
 
   readonly data = signal(hojeIso());
   readonly roster = signal<RosterRow[]>([]);
+  readonly pjesRoster = signal<PjesRosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
   readonly osRows = signal<OsRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
@@ -171,6 +181,7 @@ export class PainelPcPage {
     void this.reloadBaixas();
     void this.reloadOs();
     void this.reloadFuncoesFixas();
+    void this.reloadPjes();
   }
 
   get horariosDisponiveis(): string[] {
@@ -416,7 +427,84 @@ export class PainelPcPage {
 
   async onDataChange(novaData: string): Promise<void> {
     this.data.set(novaData);
-    await Promise.all([this.reloadRoster(), this.reloadBaixas(), this.reloadOs(), this.reloadFuncoesFixas()]);
+    await Promise.all([
+      this.reloadRoster(),
+      this.reloadBaixas(),
+      this.reloadOs(),
+      this.reloadFuncoesFixas(),
+      this.reloadPjes(),
+    ]);
+  }
+
+  async reloadPjes(): Promise<void> {
+    try {
+      this.pjesRoster.set(await this.pjesService.listPjesRosterDoDia(this.data()));
+    } catch {
+      this.errorMessage.set('Não foi possível carregar a escala PJES.');
+    }
+  }
+
+  get pjesRosterFiltrado(): PjesRosterRow[] {
+    let rows = this.pjesRoster();
+    const momento = this.filtroMomento();
+    const horario = this.filtroHorario();
+    if (momento) {
+      rows = rows.filter((r) => turnoAtivoEm(r.horarioInicio, r.horarioFim, momento));
+    } else if (horario) {
+      rows = rows.filter((r) => r.horarioInicio.slice(0, 5) === horario);
+    }
+    const busca = this.buscaPolicial().trim().toLowerCase();
+    if (busca) {
+      rows = rows.filter(
+        (r) => (r.matricula ?? '').toLowerCase().includes(busca) || r.nomeGuerra.toLowerCase().includes(busca),
+      );
+    }
+    return rows;
+  }
+
+  get pjesCards(): CardPjes[] {
+    const grupos = new Map<string, CardPjes>();
+    for (const row of this.pjesRosterFiltrado) {
+      const chave = `${row.gtRotulo}__${row.horarioInicio}`;
+      if (!grupos.has(chave)) {
+        grupos.set(chave, {
+          chave,
+          gtRotulo: row.gtRotulo,
+          horario: `${row.horarioInicio.slice(0, 5)}–${row.horarioFim.slice(0, 5)}`,
+          rows: [],
+        });
+      }
+      grupos.get(chave)!.rows.push(row);
+    }
+    return Array.from(grupos.values()).sort((a, b) => a.gtRotulo.localeCompare(b.gtRotulo));
+  }
+
+  async togglePjesFalta(row: PjesRosterRow): Promise<void> {
+    if (!this.podeEditar()) return;
+    try {
+      if (row.status === 'FALTA') {
+        await this.pjesService.limparPresencaPjes(row.escalaPjesId);
+      } else {
+        await this.pjesService.registrarPresencaPjes(row.escalaPjesId, 'FALTA');
+      }
+      await this.reloadPjes();
+    } catch {
+      this.errorMessage.set('Não foi possível atualizar a falta.');
+    }
+  }
+
+  async togglePjesAtraso(row: PjesRosterRow): Promise<void> {
+    if (!this.podeEditar()) return;
+    try {
+      if (row.status === 'ATRASADO') {
+        await this.pjesService.limparPresencaPjes(row.escalaPjesId);
+      } else {
+        await this.pjesService.registrarPresencaPjes(row.escalaPjesId, 'ATRASADO');
+      }
+      await this.reloadPjes();
+    } catch {
+      this.errorMessage.set('Não foi possível atualizar o atraso.');
+    }
   }
 
   async reloadFuncoesFixas(): Promise<void> {
