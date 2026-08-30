@@ -10,6 +10,7 @@ import {
   turnoAtivoEm,
 } from '../../../core/services/lancamento.service';
 import { GuarnicoesService, GuarnicaoRow } from '../../../core/services/guarnicoes.service';
+import { PjesService, PjesRosterRow } from '../../../core/services/pjes.service';
 
 function hojeIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -69,6 +70,13 @@ interface ViaturasPorBairro {
   total: number;
 }
 
+interface CardPjesDash {
+  chave: string;
+  gtRotulo: string;
+  horario: string;
+  rows: PjesRosterRow[];
+}
+
 @Component({
   selector: 'app-dashboard-page',
   imports: [CommonModule, FormsModule, RouterLink],
@@ -78,12 +86,15 @@ interface ViaturasPorBairro {
 export class DashboardPage {
   private readonly lancamentoService = inject(LancamentoService);
   private readonly guarnicoesService = inject(GuarnicoesService);
+  private readonly pjesService = inject(PjesService);
 
   readonly hoje = hojeIso();
   readonly loading = signal(true);
   readonly errorMessage = signal<string | null>(null);
 
   readonly roster = signal<RosterRow[]>([]);
+  /** Roster PJES (serviço extra) do dia. */
+  readonly pjesRoster = signal<PjesRosterRow[]>([]);
   readonly baixas = signal<BaixaRow[]>([]);
   readonly guarnicoes = signal<GuarnicaoRow[]>([]);
   /** Filtro por horário de início exato (chips "05:00", "06:00"...). */
@@ -142,6 +153,38 @@ export class DashboardPage {
     return horario ? this.roster().filter((r) => r.horarioInicio === horario) : this.roster();
   }
 
+  get pjesRosterFiltrado(): PjesRosterRow[] {
+    const momento = this.filtroMomento();
+    if (momento) {
+      return this.pjesRoster().filter((r) => turnoAtivoEm(r.horarioInicio, r.horarioFim, momento));
+    }
+    const horario = this.filtroHorario();
+    return horario
+      ? this.pjesRoster().filter((r) => r.horarioInicio.slice(0, 5) === horario)
+      : this.pjesRoster();
+  }
+
+  get pjesCards(): CardPjesDash[] {
+    const grupos = new Map<string, CardPjesDash>();
+    for (const r of this.pjesRosterFiltrado) {
+      const chave = `${r.gtRotulo}__${r.horarioInicio}`;
+      if (!grupos.has(chave)) {
+        grupos.set(chave, {
+          chave,
+          gtRotulo: r.gtRotulo,
+          horario: `${r.horarioInicio.slice(0, 5)}–${r.horarioFim.slice(0, 5)}`,
+          rows: [],
+        });
+      }
+      grupos.get(chave)!.rows.push(r);
+    }
+    return Array.from(grupos.values()).sort((a, b) => a.gtRotulo.localeCompare(b.gtRotulo));
+  }
+
+  get pjesFaltas(): number {
+    return this.pjesRosterFiltrado.filter((r) => r.status === 'FALTA').length;
+  }
+
   get baixasFiltradas(): BaixaRow[] {
     const momento = this.filtroMomento();
     if (momento) {
@@ -156,7 +199,7 @@ export class DashboardPage {
   }
 
   get totalLancados(): number {
-    return this.rosterFiltrado.length;
+    return this.rosterFiltrado.length + this.pjesRosterFiltrado.length;
   }
 
   private get cardChaves(): CardChave[] {
@@ -176,13 +219,15 @@ export class DashboardPage {
   }
 
   get totalAtivas(): number {
-    return this.cardsAtivos.length;
+    return this.cardsAtivos.length + this.pjesCards.length;
   }
 
   get totalDesativadas(): number {
     return this.baixasFiltradas.length;
   }
 
+  // Linhas PJES não possuem `guarnicaoId` (serviço extra, sem viatura), então
+  // não entram em `viaturasPorBairro` nem em `viaturasDesativadas`.
   get viaturasDesativadas(): ViaturaDesativada[] {
     return this.baixasFiltradas
       .map((b) => ({
@@ -220,14 +265,16 @@ export class DashboardPage {
     this.loading.set(true);
     this.errorMessage.set(null);
     try {
-      const [roster, baixas, guarnicoes] = await Promise.all([
+      const [roster, baixas, guarnicoes, pjesRoster] = await Promise.all([
         this.lancamentoService.listRosterDoDia(this.hoje),
         this.lancamentoService.listBaixasDoDia(this.hoje),
         this.guarnicoesService.listGuarnicoes(),
+        this.pjesService.listPjesRosterDoDia(this.hoje),
       ]);
       this.roster.set(roster);
       this.baixas.set(baixas);
       this.guarnicoes.set(guarnicoes);
+      this.pjesRoster.set(pjesRoster);
     } catch {
       this.errorMessage.set('Não foi possível carregar o resumo do dia.');
     } finally {
